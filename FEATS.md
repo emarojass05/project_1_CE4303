@@ -10,7 +10,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 ## Base compartida
 
 ### F0 — Protocolo serial (Comunicación, 15%)
-**Resp.:** ___  **Dep.:** ninguna (bloquea a casi todo)
+**Resp.:** P2  **Dep.:** ninguna (bloquea a casi todo)
 - [ ] Definir formato de trama: marca de inicio, tipo, longitud, payload, CRC-16
 - [ ] Definir tipos de mensaje: solicitud/respuesta de calibración, despliegue de tareas, inicio, evento, reporte de tick, disparo de tarea esporádica, detención, ACK
 - [ ] Definir la estructura del payload de cada mensaje (incluye duración del tick en la solicitud de calibración)
@@ -23,7 +23,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 ## Nodos (ESP32 / Raspberry Pi Pico o similar — no Arduino)
 
 ### F1 — Calendarizador local (20%)
-**Resp.:** ___  **Dep.:** F0 (para desplegar tareas)
+**Resp.:** P1  **Dep.:** F0 (para desplegar tareas)
 - [ ] Tick generado por timer de hardware (duración configurable, 10 ms por defecto)
 - [ ] Integrar `ut.c` / `ut.h` sin modificarlos
 - [ ] Tareas como máquinas de estados (avance de un tick a la vez)
@@ -37,13 +37,13 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Verificar: sin `delay()`, `sleep` ni busy waiting; sin RTOS decidiendo el orden
 
 ### F2 — Calibración
-**Resp.:** ___  **Dep.:** F0
+**Resp.:** P1  **Dep.:** F0
 - [ ] Medir UT por tick (sₙ) dejando margen para scheduler y envío de eventos
 - [ ] Responder al host con el valor medido
 - [ ] Repetir la medición en cada ejecución (nada fijo en el código)
 
 ### F3 — Eventos y reporte de tick
-**Resp.:** ___  **Dep.:** F0, F1
+**Resp.:** P2  **Dep.:** F0, F1
 - [ ] Búfer circular en RAM para eventos
 - [ ] Transmisión en segundo plano (sin provocar pérdida de plazos)
 - [ ] Marca de tiempo en ticks desde el mensaje de inicio
@@ -51,7 +51,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Tick cero establecido por el mensaje de inicio
 
 ### F4 — Tarea esporádica (5%)
-**Resp.:** ___  **Dep.:** F1, F5
+**Resp.:** P1  **Dep.:** F1, F5
 - [ ] Botón en pin con interrupción + debounce
 - [ ] ISR solo registra la liberación; el scheduler hace el resto
 - [ ] Máximo una tarea esporádica por nodo
@@ -59,7 +59,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Medir latencia de respuesta para el reporte
 
 ### F5 — Hardware (Hardware e integración, 10%)
-**Resp.:** ___  **Dep.:** ninguna
+**Resp.:** P2  **Dep.:** ninguna
 - [ ] LEDs con la tarea en ejecución codificada en binario
 - [ ] LED de plazo perdido
 - [ ] Botón de la tarea esporádica
@@ -70,14 +70,14 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 ## Host (C sobre Linux, con Makefile)
 
 ### F6 — Configuración y carga de tareas
-**Resp.:** ___  **Dep.:** ninguna
+**Resp.:** P3  **Dep.:** ninguna
 - [ ] Archivo de configuración: algoritmo (RMS/EDF), heurística, duración del tick, puertos seriales, período del reporte de tick, reportes perdidos para declarar falla, ruta del archivo de tareas
 - [ ] Parser del archivo de tareas (`id,tipo,W,T,D,criticidad`; tipo P o S)
 - [ ] Validación robusta: ninguna entrada inválida causa segfault ni terminación abrupta
 - [ ] Interacción simple (línea de comandos o interfaz mínima)
 
 ### F7 — Planificación y admisión (15%)
-**Resp.:** ___  **Dep.:** F2, F6
+**Resp.:** P3  **Dep.:** F2, F6
 - [ ] Costo por nodo: C(i,n) = ⌈W(i) / sₙ⌉
 - [ ] Ordenar tareas de mayor a menor utilización (medida en el nodo de mayor sₙ; desempate del grupo)
 - [ ] Prueba de admisión EDF: ΣC/T ≤ 1
@@ -88,7 +88,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Tarea esporádica admitida como periódica con período = intervalo mínimo
 
 ### F8 — Driver por nodo
-**Resp.:** ___  **Dep.:** F0
+**Resp.:** P2  **Dep.:** F0
 - [ ] Apertura y configuración del puerto serial
 - [ ] Envío/recepción de tramas con verificación de CRC
 - [ ] Solicitud de calibración (con duración del tick) y recepción de sₙ
@@ -98,7 +98,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Descartar y reportar tramas corruptas
 
 ### F9 — Arquitectura multiproceso y terminación
-**Resp.:** ___  **Dep.:** F8
+**Resp.:** P4  **Dep.:** F8
 - [ ] Al menos 4 procesos: planificador, un driver por nodo, proceso de reporte
 - [ ] Memoria compartida POSIX (`shm_open`, `mmap`) y semáforos POSIX
 - [ ] Cola de eventos acotada y sincronizada (drivers productores, reporte consumidor)
@@ -107,13 +107,13 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Liberar todos los recursos y cerrar puertos seriales
 
 ### F10 — Modo automático y manual
-**Resp.:** ___  **Dep.:** F7, F9
+**Resp.:** P3  **Dep.:** F7, F9
 - [ ] Modo automático: carga inicial desde el archivo de tareas
 - [ ] Modo manual: agregar tareas durante la ejecución
 - [ ] Nueva admisión y envío al nodo correspondiente sin detener el sistema
 
 ### F11 — Caída de nodos y replanificación (10%)
-**Resp.:** ___  **Dep.:** F3, F7, F9
+**Resp.:** P3  **Dep.:** F3, F7, F9
 - [ ] Declarar nodo caído tras N reportes consecutivos perdidos
 - [ ] Replanificar con la misma heurística y criterio de admisión
 - [ ] Las tareas del nodo sobreviviente se mantienen; solo se reubican las del caído
@@ -123,7 +123,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Probar falla por desconexión de cable y por comando del host
 
 ### F12 — Sincronización temporal
-**Resp.:** ___  **Dep.:** F8
+**Resp.:** P2  **Dep.:** F8
 - [ ] Medir el desfase entre nodos
 - [ ] Documentar el desfase medido
 
@@ -132,7 +132,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 ## Salidas
 
 ### F13 — Reporte (Reporte y experimentos, 10%)
-**Resp.:** ___  **Dep.:** F9 (cola de eventos)
+**Resp.:** P4  **Dep.:** F9 (cola de eventos)
 - [ ] Recibir datos únicamente por la cola de eventos en memoria compartida
 - [ ] Diagrama de Gantt por nodo
 - [ ] Liberaciones, ejecución, plazos y fallas
@@ -143,7 +143,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 - [ ] Latencia de las tareas esporádicas
 
 ### F14 — Documentación y entregables (15%)
-**Resp.:** ___  **Dep.:** todo lo anterior
+**Resp.:** fuera del reparto (la documentación se coordina aparte). Los experimentos sí están asignados: RMS vs EDF → P1, First-Fit vs Worst-Fit → P4; conjuntos de tareas de ejemplo → P4  **Dep.:** todo lo anterior
 - [ ] Experimento: RMS vs EDF con una carga que solo cumpla EDF
 - [ ] Experimento: First-Fit vs Worst-Fit con una carga que produzca asignaciones distintas
 - [ ] Documento del atributo Trabajo en Equipo: los 7 puntos (a–g), cada uno con pregunta y respuesta
@@ -156,7 +156,7 @@ Leyenda: `[ ]` pendiente · `[x]` listo · **Resp.:** responsable · **Dep.:** d
 
 ---
 
-## Orden sugerido
+## Orden sugerido (el plan detallado por milestones y personas está en [`MILESTONES.md`](MILESTONES.md))
 
 1. F0
 2. En paralelo: F1 + F2 (nodo) y F6 + F7 (host); F5 (hardware) puede avanzar desde ya
