@@ -227,25 +227,138 @@ static void TestSporadicRelease(void)
     CHECK(SchedulerReleaseSporadic(&scheduler, 77) == SchedulerStatusInvalidArgument);
 }
 
-static void TestOverrunSkipsRelease(void)
+static void TestOverrunAbortsAndReleasesAgain(void)
 {
     EventBuffer buffer;
     Scheduler scheduler;
     Task heavy = MakeTask(1, TaskTypePeriodic, 2, 2, 1);
-    Event event;
-    unsigned int releaseCount = 0;
 
     EventBufferInit(&buffer);
     CHECK(SchedulerInit(&scheduler, SchedulerAlgorithmRms, &buffer) == SchedulerStatusOk);
     CHECK(SchedulerAddTask(&scheduler, &heavy, 3) == SchedulerStatusOk);
     RunTicks(&scheduler, 4);
 
-    while (EventBufferPop(&buffer, &event)) {
-        if (event.type == EventTypeRelease) {
-            releaseCount++;
-        }
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeStart, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeDeadlineMiss, 2, 1, 1));
+    CHECK(NextEventIs(&buffer, EventTypeAbort, 2, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 2, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeStart, 2, 1, 0));
+    CHECK(EventBufferCount(&buffer) == 0);
+    CHECK(scheduler.missCount == 1);
+}
+
+static void TestJobFinishingBeforeDeadlineMeetsIt(void)
+{
+    EventBuffer buffer;
+    Scheduler scheduler;
+    Task task = MakeTask(1, TaskTypePeriodic, 8, 4, 1);
+
+    EventBufferInit(&buffer);
+    CHECK(SchedulerInit(&scheduler, SchedulerAlgorithmRms, &buffer) == SchedulerStatusOk);
+    CHECK(SchedulerAddTask(&scheduler, &task, 4) == SchedulerStatusOk);
+    RunTicks(&scheduler, 8);
+
+    CHECK(scheduler.missCount == 0);
+}
+
+static void TestJobLateByOneTickIsAborted(void)
+{
+    EventBuffer buffer;
+    Scheduler scheduler;
+    Task task = MakeTask(1, TaskTypePeriodic, 8, 4, 1);
+
+    EventBufferInit(&buffer);
+    CHECK(SchedulerInit(&scheduler, SchedulerAlgorithmRms, &buffer) == SchedulerStatusOk);
+    CHECK(SchedulerAddTask(&scheduler, &task, 5) == SchedulerStatusOk);
+    RunTicks(&scheduler, 5);
+
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeStart, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeDeadlineMiss, 4, 1, 1));
+    CHECK(NextEventIs(&buffer, EventTypeAbort, 4, 1, 0));
+    CHECK(EventBufferCount(&buffer) == 0);
+    CHECK(scheduler.missCount == 1);
+}
+
+static void TestAbortOfWaitingJobKeepsRunningTask(void)
+{
+    EventBuffer buffer;
+    Scheduler scheduler;
+    Task runner = MakeTask(1, TaskTypePeriodic, 5, 5, 1);
+    Task waiter = MakeTask(2, TaskTypePeriodic, 10, 3, 1);
+
+    EventBufferInit(&buffer);
+    CHECK(SchedulerInit(&scheduler, SchedulerAlgorithmRms, &buffer) == SchedulerStatusOk);
+    CHECK(SchedulerAddTask(&scheduler, &runner, 4) == SchedulerStatusOk);
+    CHECK(SchedulerAddTask(&scheduler, &waiter, 2) == SchedulerStatusOk);
+    RunTicks(&scheduler, 4);
+
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 2, 0));
+    CHECK(NextEventIs(&buffer, EventTypeStart, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeDeadlineMiss, 3, 2, 2));
+    CHECK(NextEventIs(&buffer, EventTypeAbort, 3, 2, 0));
+    CHECK(NextEventIs(&buffer, EventTypeComplete, 3, 1, 4));
+    CHECK(EventBufferCount(&buffer) == 0);
+    CHECK(scheduler.missCount == 1);
+}
+
+static void TestSeveralAbortsInOneTick(void)
+{
+    EventBuffer buffer;
+    Scheduler scheduler;
+    uint32_t id;
+
+    EventBufferInit(&buffer);
+    CHECK(SchedulerInit(&scheduler, SchedulerAlgorithmRms, &buffer) == SchedulerStatusOk);
+    for (id = 1; id <= 3; id++) {
+        Task task = MakeTask(id, TaskTypePeriodic, 10, 1, 1);
+        CHECK(SchedulerAddTask(&scheduler, &task, 2) == SchedulerStatusOk);
     }
-    CHECK(releaseCount == 1);
+    RunTicks(&scheduler, 2);
+
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 2, 0));
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 3, 0));
+    CHECK(NextEventIs(&buffer, EventTypeStart, 0, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeDeadlineMiss, 1, 1, 1));
+    CHECK(NextEventIs(&buffer, EventTypeAbort, 1, 1, 0));
+    CHECK(NextEventIs(&buffer, EventTypeDeadlineMiss, 1, 2, 2));
+    CHECK(NextEventIs(&buffer, EventTypeAbort, 1, 2, 0));
+    CHECK(NextEventIs(&buffer, EventTypeDeadlineMiss, 1, 3, 2));
+    CHECK(NextEventIs(&buffer, EventTypeAbort, 1, 3, 0));
+    CHECK(EventBufferCount(&buffer) == 0);
+    CHECK(scheduler.missCount == 3);
+}
+
+static void TestOverloadedSetKeepsRunning(void)
+{
+    SchedulerAlgorithm algorithms[2] = { SchedulerAlgorithmRms, SchedulerAlgorithmEdf };
+    unsigned int a;
+
+    for (a = 0; a < 2; a++) {
+        EventBuffer buffer;
+        Scheduler scheduler;
+        Event event;
+        Task first = MakeTask(1, TaskTypePeriodic, 4, 4, 1);
+        Task second = MakeTask(2, TaskTypePeriodic, 5, 5, 2);
+        Task third = MakeTask(3, TaskTypePeriodic, 6, 6, 3);
+
+        EventBufferInit(&buffer);
+        CHECK(SchedulerInit(&scheduler, algorithms[a], &buffer) == SchedulerStatusOk);
+        CHECK(SchedulerAddTask(&scheduler, &first, 3) == SchedulerStatusOk);
+        CHECK(SchedulerAddTask(&scheduler, &second, 3) == SchedulerStatusOk);
+        CHECK(SchedulerAddTask(&scheduler, &third, 3) == SchedulerStatusOk);
+
+        for (unsigned int tick = 0; tick < 100; tick++) {
+            CHECK(SchedulerTick(&scheduler) == SchedulerStatusOk);
+            while (EventBufferPop(&buffer, &event)) {
+            }
+        }
+        CHECK(scheduler.tick == 100);
+        CHECK(scheduler.missCount > 0);
+    }
 }
 
 static void TestInvalidTasks(void)
@@ -296,7 +409,12 @@ int main(void)
     TestEdfFullLoadMeetsDeadlines();
     TestEightTasksRunInIdOrder();
     TestSporadicRelease();
-    TestOverrunSkipsRelease();
+    TestOverrunAbortsAndReleasesAgain();
+    TestJobFinishingBeforeDeadlineMeetsIt();
+    TestJobLateByOneTickIsAborted();
+    TestAbortOfWaitingJobKeepsRunningTask();
+    TestSeveralAbortsInOneTick();
+    TestOverloadedSetKeepsRunning();
     TestInvalidTasks();
     TestIdleTicksAndNullArguments();
 

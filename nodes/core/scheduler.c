@@ -49,6 +49,28 @@ static int HasPriority(const Scheduler *scheduler, size_t a, size_t b)
     return first->task.id < second->task.id;
 }
 
+/* Aborts every pending job whose deadline has been reached */
+static void AbortLateJobs(Scheduler *scheduler)
+{
+    size_t i;
+
+    for (i = 0; i < scheduler->taskCount; i++) {
+        SchedulerTask *entry = &scheduler->tasks[i];
+
+        if (!entry->active || scheduler->tick < entry->absoluteDeadline) {
+            continue;
+        }
+        Emit(scheduler, EventTypeDeadlineMiss, entry->task.id, entry->remaining);
+        Emit(scheduler, EventTypeAbort, entry->task.id, 0);
+        entry->active = 0;
+        entry->remaining = 0;
+        scheduler->missCount++;
+        if (scheduler->runningIndex == (int)i) {
+            scheduler->runningIndex = SchedulerNoTask;
+        }
+    }
+}
+
 /* Releases every periodic job that is due at the current tick */
 static void ReleasePeriodicJobs(Scheduler *scheduler)
 {
@@ -99,6 +121,7 @@ SchedulerStatus SchedulerInit(Scheduler *scheduler, SchedulerAlgorithm algorithm
     scheduler->algorithm = algorithm;
     scheduler->tick = 0;
     scheduler->runningIndex = SchedulerNoTask;
+    scheduler->missCount = 0;
     scheduler->events = events;
     return SchedulerStatusOk;
 }
@@ -172,6 +195,7 @@ SchedulerStatus SchedulerTick(Scheduler *scheduler)
         return SchedulerStatusInvalidArgument;
     }
 
+    AbortLateJobs(scheduler);
     ReleasePeriodicJobs(scheduler);
     selected = SelectTask(scheduler);
 

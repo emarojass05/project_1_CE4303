@@ -49,6 +49,7 @@ typedef struct {
     SchedulerAlgorithm algorithm;
     uint32_t tick;      /* Tick the next call to SchedulerTick will process */
     int runningIndex;   /* Index in tasks, or SchedulerNoTask */
+    uint32_t missCount; /* Jobs aborted for missing their deadline */
     EventBuffer *events; /* Where the scheduler reports what it does */
 } Scheduler;
 
@@ -62,7 +63,7 @@ SchedulerStatus SchedulerAddTask(Scheduler *scheduler, const Task *task, uint32_
 /* Requests a job of a sporadic task at the current tick */
 SchedulerStatus SchedulerReleaseSporadic(Scheduler *scheduler, uint32_t taskId);
 
-/* Advances one tick: releases jobs, picks a task and runs it for the tick */
+/* Advances one tick: aborts late jobs, releases jobs, picks a task and runs it */
 SchedulerStatus SchedulerTick(Scheduler *scheduler);
 
 #endif /* SCHEDULER_H */
