@@ -38,15 +38,15 @@ test: $(TEST_BINS)
 
 $(BUILD)/common/tests/%: common/tests/%.c $(COMMON_LIB)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 $(BUILD)/host/tests/%: host/tests/%.c $(HOST_LIB)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 $(BUILD)/nodes/core/tests/%: nodes/core/tests/%.c $(NODE_LIB)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 asan:
 	$(MAKE) test SANITIZE=1
