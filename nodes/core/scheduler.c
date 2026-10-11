@@ -121,6 +121,7 @@ SchedulerStatus SchedulerInit(Scheduler *scheduler, SchedulerAlgorithm algorithm
     scheduler->algorithm = algorithm;
     scheduler->tick = 0;
     scheduler->runningIndex = SchedulerNoTask;
+    scheduler->lastRunIndex = SchedulerNoTask;
     scheduler->missCount = 0;
     scheduler->events = events;
     return SchedulerStatusOk;
@@ -198,6 +199,7 @@ SchedulerStatus SchedulerTick(Scheduler *scheduler)
     AbortLateJobs(scheduler);
     ReleasePeriodicJobs(scheduler);
     selected = SelectTask(scheduler);
+    scheduler->lastRunIndex = selected;
 
     if (selected != SchedulerNoTask) {
         entry = &scheduler->tasks[selected];
