@@ -30,7 +30,7 @@ HOST_TESTS   := $(wildcard host/tests/test_*.c)
 NODE_TESTS   := $(wildcard nodes/core/tests/test_*.c)
 TEST_BINS    := $(patsubst %.c,$(BUILD)/%,$(COMMON_TESTS) $(HOST_TESTS) $(NODE_TESTS))
 
-.PHONY: test asan clean
+.PHONY: test asan demo clean
 
 test: $(TEST_BINS)
 	@for t in $(TEST_BINS); do echo "== $$t"; ./$$t || exit 1; done
@@ -38,18 +38,25 @@ test: $(TEST_BINS)
 
 $(BUILD)/common/tests/%: common/tests/%.c $(COMMON_LIB)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 $(BUILD)/host/tests/%: host/tests/%.c $(HOST_LIB)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 $(BUILD)/nodes/core/tests/%: nodes/core/tests/%.c $(NODE_LIB)
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 asan:
 	$(MAKE) test SANITIZE=1
+
+# Host program: run it with ./build/host_demo
+demo: $(BUILD)/host_demo
+
+$(BUILD)/host_demo: host/src/main.c $(HOST_LIB)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 clean:
 	rm -rf build build-asan
