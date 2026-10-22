@@ -1,6 +1,7 @@
 # Makefile raiz - Proyecto 1 (CE 4303)
 #
 # Uso:
+#   make         compila el host (build/host_demo) y corre todas las pruebas
 #   make test    compila y corre todas las pruebas
 #   make asan    igual, pero con AddressSanitizer + UBSan (detecta segfaults)
 #   make clean   borra las carpetas de compilacion
@@ -30,7 +31,9 @@ HOST_TESTS   := $(wildcard host/tests/test_*.c)
 NODE_TESTS   := $(wildcard nodes/core/tests/test_*.c)
 TEST_BINS    := $(patsubst %.c,$(BUILD)/%,$(COMMON_TESTS) $(HOST_TESTS) $(NODE_TESTS))
 
-.PHONY: test asan demo clean
+.PHONY: all test asan demo clean
+
+all: test demo
 
 test: $(TEST_BINS)
 	@for t in $(TEST_BINS); do echo "== $$t"; ./$$t || exit 1; done
