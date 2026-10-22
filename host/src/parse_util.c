@@ -36,6 +36,19 @@ LineRead ParseReadLine(FILE *input, char buffer[ParseLineMax + 1])
     return tooLong ? LineReadTooLong : LineReadOk;
 }
 
+bool ParseLineUsable(LineRead result, size_t line, ParseError *error)
+{
+    if (result == LineReadTooLong) {
+        ParseErrorSet(error, line, "line longer than %d characters", ParseLineMax);
+        return false;
+    }
+    if (result == LineReadBinary) {
+        ParseErrorSet(error, line, "line contains a NUL byte");
+        return false;
+    }
+    return true;
+}
+
 void ParseStripComment(char *text)
 {
     char *mark = strchr(text, '#');

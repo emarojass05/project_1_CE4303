@@ -30,6 +30,9 @@ typedef enum {
    Never writes past the buffer; an overlong or binary line is consumed whole. */
 LineRead ParseReadLine(FILE *input, char buffer[ParseLineMax + 1]);
 
+/* True when the line can be parsed; otherwise fills error with the reason */
+bool ParseLineUsable(LineRead result, size_t line, ParseError *error);
+
 /* Cuts text at the first '#' */
 void ParseStripComment(char *text);
 

@@ -158,19 +158,6 @@ static int FindKey(const char *name)
     return -1;
 }
 
-static bool ReportBadRead(LineRead result, size_t line, ParseError *error)
-{
-    if (result == LineReadTooLong) {
-        ParseErrorSet(error, line, "line longer than %d characters", ParseLineMax);
-        return true;
-    }
-    if (result == LineReadBinary) {
-        ParseErrorSet(error, line, "line contains a NUL byte");
-        return true;
-    }
-    return false;
-}
-
 static bool ApplyLine(HostConfig *config, bool seen[ConfigKeyCount], char *text, size_t line,
                       ParseError *error)
 {
@@ -250,7 +237,7 @@ ConfigStatus ConfigLoadStream(FILE *input, HostConfig *config, ParseError *error
             break;
         }
         line++;
-        if (ReportBadRead(result, line, error) ||
+        if (!ParseLineUsable(result, line, error) ||
             !ApplyLine(&loaded, seen, buffer, line, error)) {
             return ConfigStatusInvalid;
         }
