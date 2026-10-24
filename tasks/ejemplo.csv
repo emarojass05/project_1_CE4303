@@ -1,0 +1,15 @@
+# Conjunto de tareas de ejemplo.
+# Formato: id,tipo,W,T,D,criticidad
+#   id          entero >= 1, unico
+#   tipo        P (periodica) o S (esporadica)
+#   W           trabajo en unidades de trabajo (llamadas a unidad_trabajo())
+#   T           periodo en ticks (en S: intervalo minimo entre llegadas)
+#   D           plazo relativo en ticks, D <= T
+#   criticidad  mayor = mas critica (se usa al replanificar si cae un nodo)
+id,tipo,W,T,D,criticidad
+1,P,200,20,20,5
+2,P,300,40,30,4
+3,P,150,25,25,3
+4,P,400,80,80,2
+5,P,100,50,40,1
+6,S,120,100,60,5
