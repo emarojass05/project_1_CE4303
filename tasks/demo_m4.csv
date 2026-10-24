@@ -1,0 +1,14 @@
+# Tareas para la demo de M4 (config/demo_m4.conf, tick de 10 ms).
+# Pensadas para sn cerca de 61 (ESP32) y 86 (Pico): cada nodo queda con
+# U entre 0.6 y 0.7, asi que si uno cae no todo cabe en el otro y el host
+# rechaza primero las de menor criticidad. Una esporadica por nodo (6 y 7),
+# liberada con el boton de cada placa o con el comando s.
+id,tipo,W,T,D,criticidad
+1,P,430,20,20,2
+2,P,344,40,40,1
+3,P,516,25,25,5
+4,P,602,50,50,1
+5,P,258,30,30,3
+6,S,172,100,50,5
+7,S,172,100,50,5
+8,P,172,10,10,4

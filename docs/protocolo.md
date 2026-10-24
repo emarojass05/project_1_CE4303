@@ -91,6 +91,8 @@ Desplazamientos en bytes dentro del payload. `u8`/`u16`/`u32` son enteros sin si
 |---|---|---|---|
 | 0 | u32 | `tickUs` | Duración del tick en microsegundos (10 ms → 10000) |
 
+El nodo acepta `tickUs` entre 1000 y 1 000 000 (1 ms a 1 s, el mismo rango que `tick_ms` del host). Fuera de ese rango responde `Ack` con `BadPayload` en lugar de `CalibResponse`. Si la medición falla, responde `Ack` con `BadState`. Desde que acepta la calibración, el timer del nodo late con `tickUs`.
+
 ### `CalibResponse` (0x02), 4 bytes
 
 | Offset | Tipo | Campo | Descripción |
@@ -200,7 +202,10 @@ Si el host deja de comunicarse, el nodo **sigue ejecutando** en `Running` (F1). 
 
 - Para cada mensaje host → nodo, el host espera la respuesta con el mismo `seq`. Si no llega en **200 ms**, reenvía la **misma trama (mismo `seq`)**, hasta **3 reintentos**. Si aun así no hay respuesta, considera el nodo no disponible (F11).
 - El nodo recuerda el último `seq` procesado y su respuesta. Si recibe otra vez ese mismo `seq` con el mismo tipo, **reenvía la respuesta guardada sin volver a aplicar el mensaje**. Así, perder un `Ack` nunca despliega una tarea dos veces.
-- El host incrementa `seq` en cada mensaje nuevo, con un contador por nodo.
+- El host incrementa `seq` en cada mensaje nuevo, con un contador por nodo. El primer `seq` de cada ejecución del host sale del reloj y del pid, para que el nodo no tome el primer mensaje de una ejecución nueva por una retransmisión de la anterior.
+- El nodo lee el puerto una vez por tick, así que el host espera **200 ms + 2 ticks** por respuesta (220 ms con el tick de 10 ms). La calibración espera 1 s más, porque el nodo mide durante un tick (como máximo 100 ms) antes de responder.
+- Al arrancar, el host envía primero `Stop` a cada nodo (hasta 10 intentos). Así un nodo que quedó en `Running` de una ejecución anterior vuelve a `Idle` antes de la calibración.
+- El host descarta los `Event` y `TickReport` que llegan fuera de una corrida (antes de enviar `Start` o después del `Ack` de `Stop`): son restos de una ejecución anterior.
 
 ## 8. Secuencia típica
 
@@ -253,3 +258,4 @@ El código no usa memoria dinámica ni depende de la plataforma: compila igual e
 | Versión | Fecha | Cambio |
 |---|---|---|
 | 1.0 | 2026-10-20 | Versión inicial (M1) |
+| 1.0.1 | 2026-10-24 | Aclaraciones de M3 sin cambios de formato: rango de `tickUs`, respuesta `Ack` cuando la calibración falla, tiempo de espera según el tick, `seq` inicial, saludo con `Stop` y descarte de eventos fuera de una corrida |

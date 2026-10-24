@@ -63,6 +63,10 @@ AssignStatus AssignPlaceTask(NodeState *nodes, size_t nodeCount, const Task *tas
                              AssignAlgorithm algorithm, AssignHeuristic heuristic,
                              Assignment *outAssignment);
 
+/* Adds a task that was already admitted to the node, without the admission
+   test, e.g. to rebuild the state of a node; false if it has no room */
+bool AssignCommitTask(NodeState *node, const Task *task);
+
 /* Places every task; outAssignments follows the input task order */
 AssignStatus AssignTasks(const Task *tasks, size_t taskCount,
                          const NodeInfo *nodes, size_t nodeCount,

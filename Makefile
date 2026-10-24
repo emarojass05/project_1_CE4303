@@ -1,7 +1,10 @@
 # Makefile raiz - Proyecto 1 (CE 4303)
 #
 # Uso:
-#   make         compila el host (build/host_demo) y corre todas las pruebas
+#   make         compila el host (build/bin/host) y corre todas las pruebas
+#   make host    compila solo el host
+#   make run     corre el host con config/ejemplo.conf (CONFIG=otro.conf para cambiarlo)
+#   make fake    compila el nodo simulado (build/bin/fake_node) para probar sin placas
 #   make test    compila y corre todas las pruebas
 #   make asan    igual, pero con AddressSanitizer + UBSan (detecta segfaults)
 #   make clean   borra las carpetas de compilacion
@@ -12,10 +15,15 @@
 #   make esp32-monitor  abre la consola serial (salir con Ctrl+])
 #   make esp32-run      carga y abre la consola
 #   Otro puerto: make esp32-run PORT=/dev/ttyACM0
+#
+# Nodo Raspberry Pi Pico (requiere el Pico SDK en PICO_SDK_PATH y gcc-arm-none-eabi):
+#   make pico           compila el firmware (nodes/pico/build/rt_node_pico.uf2)
+#   make pico-flash     lo carga con picotool (la Pico en modo BOOTSEL)
+#   Sin picotool: copiar el .uf2 a la unidad RPI-RP2 que aparece en modo BOOTSEL
 
 CC       ?= gcc
 CFLAGS   := -std=c11 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -Wpedantic -g -O0
-INCLUDES := -Icommon -Ihost/src -Inodes/core
+INCLUDES := -Icommon -Ihost/src -Inodes/core -Itools
 BUILD    := build
 
 # Con "make asan" se activa SANITIZE y se usa otra carpeta, para no
@@ -32,15 +40,18 @@ COMMON_LIB := $(wildcard common/*.c)
 HOST_LIB := $(filter-out host/src/main.c,$(wildcard host/src/*.c)) $(COMMON_LIB)
 NODE_LIB := $(wildcard nodes/core/*.c) $(COMMON_LIB)
 
+# Nodo simulado sobre una pseudo terminal: usa el mismo codigo de nodes/core
+FAKE_NODE_LIB := tools/fake_node.c $(wildcard nodes/core/*.c)
+
 # Cada archivo test_*.c es un programa de prueba independiente
 COMMON_TESTS := $(wildcard common/tests/test_*.c)
 HOST_TESTS   := $(wildcard host/tests/test_*.c)
 NODE_TESTS   := $(wildcard nodes/core/tests/test_*.c)
 TEST_BINS    := $(patsubst %.c,$(BUILD)/%,$(COMMON_TESTS) $(HOST_TESTS) $(NODE_TESTS))
 
-.PHONY: all test asan demo clean esp32 esp32-flash esp32-monitor esp32-run
+.PHONY: all test asan host run fake clean esp32 esp32-flash esp32-monitor esp32-run pico pico-flash
 
-all: test demo
+all: test host fake
 
 test: $(TEST_BINS)
 	@for t in $(TEST_BINS); do echo "== $$t"; ./$$t || exit 1; done
@@ -50,7 +61,7 @@ $(BUILD)/common/tests/%: common/tests/%.c $(COMMON_LIB)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
-$(BUILD)/host/tests/%: host/tests/%.c $(HOST_LIB)
+$(BUILD)/host/tests/%: host/tests/%.c $(HOST_LIB) $(FAKE_NODE_LIB)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
@@ -61,10 +72,21 @@ $(BUILD)/nodes/core/tests/%: nodes/core/tests/%.c $(NODE_LIB)
 asan:
 	$(MAKE) test SANITIZE=1
 
-# Host program: run it with ./build/host_demo
-demo: $(BUILD)/host_demo
+# Programa del host: ./build/bin/host [-v] [config]
+host: $(BUILD)/bin/host
 
-$(BUILD)/host_demo: host/src/main.c $(HOST_LIB)
+$(BUILD)/bin/host: host/src/main.c $(HOST_LIB)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
+
+CONFIG ?= config/ejemplo.conf
+run: $(BUILD)/bin/host
+	./$(BUILD)/bin/host $(CONFIG)
+
+# Nodo simulado: ./build/bin/fake_node [sn] imprime el puerto que hay que poner en "ports"
+fake: $(BUILD)/bin/fake_node
+
+$(BUILD)/bin/fake_node: tools/fake_node_main.c $(FAKE_NODE_LIB) $(COMMON_LIB)
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
@@ -88,3 +110,14 @@ esp32-monitor:
 
 esp32-run:
 	$(IDF_PY) -p $(PORT) flash monitor
+
+# ---- Nodo Raspberry Pi Pico ----
+PICO_SDK_PATH ?= $(HOME)/pico/pico-sdk
+PICO_BUILD    := nodes/pico/build
+
+pico:
+	cmake -S nodes/pico -B $(PICO_BUILD) -DPICO_SDK_PATH="$(PICO_SDK_PATH)"
+	cmake --build $(PICO_BUILD)
+
+pico-flash: pico
+	picotool load -x $(PICO_BUILD)/rt_node_pico.uf2

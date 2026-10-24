@@ -55,7 +55,7 @@ static void TestEndsWhenProducerFinishes(void)
     ReadAll(out, text, sizeof(text));
     CHECK(strstr(text, "Events received: 70") != NULL);
     CHECK(strstr(text, "Events ignored: 0") != NULL);
-    CHECK(strstr(text, "Node 1: 5 task switches") != NULL);
+    CHECK(strstr(text, "(5 preemptions)") != NULL);
     CHECK(EventQueueOpen(queueName) == NULL);
 
     fclose(out);
