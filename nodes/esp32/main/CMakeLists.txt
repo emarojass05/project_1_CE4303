@@ -8,6 +8,7 @@ idf_component_register(
          "../../core/scheduler.c"
          "../../core/event_buffer.c"
          "../../core/event_tx.c"
+         "../../core/node_link.c"
          "../../core/indicators.c"
          "../../core/calibration.c"
          "../../core/debounce.c"

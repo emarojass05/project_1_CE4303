@@ -28,6 +28,7 @@ add_executable(rt_node_pico
     ${NODES_DIR}/core/scheduler.c
     ${NODES_DIR}/core/event_buffer.c
     ${NODES_DIR}/core/event_tx.c
+    ${NODES_DIR}/core/node_link.c
     ${NODES_DIR}/core/indicators.c
     ${NODES_DIR}/core/calibration.c
     ${NODES_DIR}/core/debounce.c

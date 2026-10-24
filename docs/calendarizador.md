@@ -36,10 +36,8 @@ El criterio es el mismo en todos los nodos y en toda la ejecución. Lo verifican
 
 ## Calibración (sₙ)
 
-Al arrancar, el nodo mide cuánto tardan 200 llamadas a `unidad_trabajo()` con el reloj de la placa y calcula cuántas caben en un tick usando solo el **70 %** del tick (`CalibrationDefaultPercent`). El 30 % restante queda para el calendarizador, los LEDs y el envío de eventos (§3.3). El valor se mide en cada arranque y nunca está fijo en el código (`nodes/core/calibration.c`).
-
-En M3 la medición se hará al recibir `CalibRequest`, con la duración del tick que envía el host, y el resultado se devolverá en `CalibResponse`.
+El host envía `CalibRequest` con la duración del tick. El nodo llama a `unidad_trabajo()` una y otra vez durante un tick (mínimo 20 llamadas, máximo 100 ms de medición) midiendo con el reloj de la placa, y calcula cuántas caben en un tick usando solo el **70 %** del tick (`CalibrationDefaultPercent`). El 30 % restante queda para el calendarizador, los LEDs y el envío de eventos (§3.3). El resultado se devuelve en `CalibResponse`. Se mide en cada ejecución y nunca está fijo en el código (`nodes/core/calibration.c`, `nodes/app/node_app.c`).
 
 ## Eventos
 
-El calendarizador escribe los eventos en un búfer circular en RAM (`nodes/core/event_buffer.c`, 64 eventos). Después de cada tick, el ciclo principal los envía como tramas `Event` (`nodes/core/event_tx.c`) escribiendo solo lo que el puerto acepta en ese momento, con un tope de 8 tramas por tick. Lo que no cabe espera al siguiente tick, así el envío nunca retrasa el calendarizador. Si el búfer se llena, el evento se descarta y se cuenta (`EventBufferDroppedCount`).
+El calendarizador escribe los eventos en un búfer circular en RAM (`nodes/core/event_buffer.c`, 64 eventos). Después de cada tick, el ciclo principal los envía como tramas `Event` (`nodes/core/event_tx.c`, a través de `nodes/core/node_link.c`) escribiendo solo lo que el puerto acepta en ese momento, con un tope de 8 escrituras por tick. Las respuestas al host (`Ack`, `CalibResponse`) y los `TickReport` pasan antes que los eventos, pero nunca cortan una trama a medias. Lo que no cabe espera al siguiente tick, así el envío nunca retrasa el calendarizador. Si el búfer se llena, el evento se descarta y se cuenta (`EventBufferDroppedCount`).

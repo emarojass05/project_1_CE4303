@@ -20,6 +20,7 @@ _Static_assert(TaskLedCount > 0 && (int)TaskLedCount <= (int)IndicatorsMaxTaskBi
                "BOARD_TASK_LED_PINS must list between 1 and 8 pins");
 
 static repeating_timer_t tickTimer;
+static bool tickRunning;
 static volatile uint32_t pendingTicks; /* Ticks raised by the timer, not yet run */
 static Debounce buttonDebounce;
 static atomic_bool buttonPressed;
@@ -68,8 +69,18 @@ static bool OnTick(repeating_timer_t *timer)
 
 bool BoardTickStart(uint32_t tickUs)
 {
+    uint32_t saved;
+
+    if (tickRunning) {
+        cancel_repeating_timer(&tickTimer);
+        tickRunning = false;
+    }
+    saved = save_and_disable_interrupts();
+    pendingTicks = 0; /* Ticks of the old period are not run */
+    restore_interrupts(saved);
     /* A negative delay keeps a fixed period from start to start */
-    return add_repeating_timer_us(-(int64_t)tickUs, OnTick, NULL, &tickTimer);
+    tickRunning = add_repeating_timer_us(-(int64_t)tickUs, OnTick, NULL, &tickTimer);
+    return tickRunning;
 }
 
 void BoardTickWait(void)
@@ -145,6 +156,21 @@ size_t BoardSerialWrite(const uint8_t *bytes, size_t count)
     }
     for (i = 0; i < count; i++) {
         putchar_raw(bytes[i]);
+    }
+    return count;
+}
+
+size_t BoardSerialRead(uint8_t *bytes, size_t capacity)
+{
+    size_t count = 0;
+    int c;
+
+    if (bytes == NULL) {
+        return 0;
+    }
+    /* A timeout of 0 checks the USB buffer once and never waits */
+    while (count < capacity && (c = getchar_timeout_us(0)) >= 0) {
+        bytes[count++] = (uint8_t)c;
     }
     return count;
 }

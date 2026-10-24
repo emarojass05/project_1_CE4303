@@ -20,8 +20,4 @@
 /* Rebotes del boton: se ignoran las pulsaciones a menos de esto de la anterior */
 #define BOARD_DEBOUNCE_US 50000u
 
-/* 1: eventos como texto legible (solo para depurar con un monitor serial).
-   0: eventos como tramas Event del protocolo, que es lo que lee el host. */
-#define BOARD_TEXT_EVENTS 0
-
 #endif /* BOARD_CONFIG_H */

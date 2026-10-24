@@ -25,6 +25,8 @@ _Static_assert(TaskLedCount > 0 && (int)TaskLedCount <= (int)IndicatorsMaxTaskBi
                "BOARD_TASK_LED_PINS must list between 1 and 8 pins");
 
 static TaskHandle_t tickTaskHandle;
+static gptimer_handle_t tickTimer;
+static bool tickRunning;
 static Debounce buttonDebounce;
 static atomic_bool buttonPressed;
 
@@ -79,30 +81,46 @@ static bool IRAM_ATTR OnTimerAlarm(gptimer_handle_t timer,
     return higherPriorityWoken == pdTRUE;
 }
 
-/* Hardware timer with automatic reload every tickUs */
-bool BoardTickStart(uint32_t tickUs)
+/* Creates the timer once; later calls only change its period */
+static bool CreateTimer(void)
 {
-    gptimer_handle_t timer = NULL;
     gptimer_config_t timerConfig = {
         .clk_src = GPTIMER_CLK_SRC_DEFAULT,
         .direction = GPTIMER_COUNT_UP,
         .resolution_hz = 1000000, /* 1 count = 1 us */
     };
+    gptimer_event_callbacks_t callbacks = {
+        .on_alarm = OnTimerAlarm,
+    };
+
+    return gptimer_new_timer(&timerConfig, &tickTimer) == ESP_OK &&
+           gptimer_register_event_callbacks(tickTimer, &callbacks, NULL) == ESP_OK &&
+           gptimer_enable(tickTimer) == ESP_OK;
+}
+
+/* Hardware timer with automatic reload every tickUs, restarted from 0 */
+bool BoardTickStart(uint32_t tickUs)
+{
     gptimer_alarm_config_t alarmConfig = {
         .alarm_count = tickUs,
         .reload_count = 0,
         .flags.auto_reload_on_alarm = true,
     };
-    gptimer_event_callbacks_t callbacks = {
-        .on_alarm = OnTimerAlarm,
-    };
 
     tickTaskHandle = xTaskGetCurrentTaskHandle();
-    return gptimer_new_timer(&timerConfig, &timer) == ESP_OK &&
-           gptimer_register_event_callbacks(timer, &callbacks, NULL) == ESP_OK &&
-           gptimer_set_alarm_action(timer, &alarmConfig) == ESP_OK &&
-           gptimer_enable(timer) == ESP_OK &&
-           gptimer_start(timer) == ESP_OK;
+    if (tickTimer == NULL && !CreateTimer()) {
+        return false;
+    }
+    if (tickRunning) {
+        (void)gptimer_stop(tickTimer);
+        tickRunning = false;
+    }
+    /* Ticks of the old period are not run */
+    (void)ulTaskNotifyValueClear(tickTaskHandle, UINT32_MAX);
+    tickRunning = gptimer_set_raw_count(tickTimer, 0) == ESP_OK &&
+                  gptimer_set_alarm_action(tickTimer, &alarmConfig) == ESP_OK &&
+                  gptimer_start(tickTimer) == ESP_OK;
+    return tickRunning;
 }
 
 void BoardTickWait(void)
@@ -150,12 +168,11 @@ bool BoardButtonTakePress(void)
 
 bool BoardSerialInit(void)
 {
-#if !BOARD_TEXT_EVENTS
     /* Console text would corrupt the frames (docs/protocolo.md, section 1) */
     esp_log_level_set("*", ESP_LOG_NONE);
-#endif
-    /* The console already set 115200 8N1; the driver gives uart_tx_chars */
-    return uart_driver_install(BOARD_UART, 256, 0, 0, NULL, 0) == ESP_OK;
+    /* The console already set 115200 8N1; the driver keeps a receive buffer
+       and gives uart_tx_chars */
+    return uart_driver_install(BOARD_UART, 512, 0, 0, NULL, 0) == ESP_OK;
 }
 
 size_t BoardSerialWrite(const uint8_t *bytes, size_t count)
@@ -168,4 +185,16 @@ size_t BoardSerialWrite(const uint8_t *bytes, size_t count)
     /* Fills only the free space of the hardware FIFO and returns at once */
     written = uart_tx_chars(BOARD_UART, (const char *)bytes, count);
     return written > 0 ? (size_t)written : 0;
+}
+
+size_t BoardSerialRead(uint8_t *bytes, size_t capacity)
+{
+    int count;
+
+    if (bytes == NULL || capacity == 0) {
+        return 0;
+    }
+    /* A timeout of 0 ticks takes what the driver already received */
+    count = uart_read_bytes(BOARD_UART, bytes, capacity, 0);
+    return count > 0 ? (size_t)count : 0;
 }
