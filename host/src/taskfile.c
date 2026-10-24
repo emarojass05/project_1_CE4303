@@ -67,6 +67,9 @@ static bool ParseTaskType(const char *text, TaskType *outType, size_t line, Pars
 
 static bool HasTaskId(const TaskFile *result, uint32_t id)
 {
+    if (result == NULL) {
+        return false;
+    }
     for (size_t i = 0; i < result->taskCount; i++) {
         if (result->tasks[i].id == id) {
             return true;
@@ -192,6 +195,23 @@ TaskFileStatus TaskFileLoadStream(FILE *input, TaskFile *result)
         AddRejection(result, &error);
     }
     return result->rejectedCount == 0 ? TaskFileStatusOk : TaskFileStatusRejectedLines;
+}
+
+bool TaskFileParseTask(const char *text, Task *outTask, ParseError *error)
+{
+    char buffer[ParseLineMax + 1];
+
+    if (text == NULL || outTask == NULL) {
+        ParseErrorSet(error, 0, "no task given");
+        return false;
+    }
+    if (strlen(text) > ParseLineMax) {
+        ParseErrorSet(error, 0, "line longer than %d characters", ParseLineMax);
+        return false;
+    }
+    snprintf(buffer, sizeof(buffer), "%s", text);
+    ParseStripComment(buffer);
+    return ParseTaskLine(ParseTrim(buffer), 0, NULL, outTask, error);
 }
 
 TaskFileStatus TaskFileLoadFile(const char *path, TaskFile *result)

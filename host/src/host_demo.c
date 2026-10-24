@@ -66,7 +66,7 @@ static void SleepMilliseconds(long milliseconds)
 /* Report process: counts events until the queue is closed and empty */
 static int RunReporter(EventQueue *queue, FILE *out)
 {
-    Report report;
+    static Report report;
     HostEvent hostEvent;
 
     ReportInit(&report);
@@ -75,6 +75,7 @@ static int RunReporter(EventQueue *queue, FILE *out)
     }
     ReportPrint(&report, out);
     fflush(out);
+    ReportFree(&report);
     return 0;
 }
 
@@ -89,6 +90,8 @@ static int RunProducer(EventQueue *queue, uint32_t passes, long delayMillisecond
         for (step = 0; step < sizeof(demoSteps) / sizeof(demoSteps[0]); step++) {
             HostEvent hostEvent;
 
+            memset(&hostEvent, 0, sizeof(hostEvent));
+            hostEvent.kind = HostEventNode;
             hostEvent.nodeId = DemoNodeId;
             hostEvent.event.type = demoSteps[step].type;
             hostEvent.event.tick = sequence++;

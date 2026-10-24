@@ -193,6 +193,23 @@ AssignStatus AssignPlaceTask(NodeState *nodes, size_t nodeCount, const Task *tas
     return AssignStatusOk;
 }
 
+bool AssignCommitTask(NodeState *node, const Task *task)
+{
+    uint32_t cost = 0;
+
+    if (node == NULL || task == NULL || node->taskCount >= AssignMaxTasksPerNode ||
+        TaskCost(task, node->info.unitsPerTick, &cost) != TaskStatusOk) {
+        return false;
+    }
+    node->entries[node->taskCount].cost = cost;
+    node->entries[node->taskCount].period = task->period;
+    node->taskCount++;
+    if (task->type == TaskTypeSporadic) {
+        node->hasSporadic = true;
+    }
+    return true;
+}
+
 AssignStatus AssignTasks(const Task *tasks, size_t taskCount,
                          const NodeInfo *nodes, size_t nodeCount,
                          AssignAlgorithm algorithm, AssignHeuristic heuristic,

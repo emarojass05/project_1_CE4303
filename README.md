@@ -6,7 +6,7 @@ que las ejecutan con un calendarizador local RMS o EDF.
 - Requisitos y reparto de trabajo: [`FEATS.md`](FEATS.md)
 - Plan por milestones: [`MILESTONES.md`](MILESTONES.md)
 - Nodos (conexiones, compilación y carga): [`docs/nodos.md`](docs/nodos.md)
-- Host (procesos, driver serial, modo automático): [`docs/host.md`](docs/host.md)
+- Host (procesos, driver serial, modos automático y manual, caída de nodos, reporte y desfase): [`docs/host.md`](docs/host.md)
 - Protocolo serial: [`docs/protocolo.md`](docs/protocolo.md)
 
 ## Estructura

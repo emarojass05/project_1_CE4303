@@ -116,6 +116,7 @@ static void TestSessionWithFakeNode(void)
     pid_t node;
     pid_t driver;
     size_t events;
+    size_t reports;
 
     node = StartFakeNode(ports[0], sizeof(ports[0]), 33);
     CHECK(node > 0);
@@ -146,17 +147,32 @@ static void TestSessionWithFakeNode(void)
     request = Empty(MessageTypeStop);
     CHECK(AckOf(&control->channels[0], &request) == AckStatusOk);
 
-    events = EventQueueCount(queue);
+    /* Node events and tick reports share the queue; count each kind */
+    events = 0;
+    reports = 0;
+    while (EventQueueCount(queue) > 0 && EventQueuePop(queue, &hostEvent)) {
+        CHECK(hostEvent.nodeId == 1);
+        if (hostEvent.kind == HostEventTickReport) {
+            CHECK(hostEvent.hostUs > 0);
+            CHECK(hostEvent.event.tick % 2 == 0);
+            reports++;
+            continue;
+        }
+        CHECK(hostEvent.kind == HostEventNode);
+        if (events == 0) {
+            CHECK(hostEvent.event.type == EventTypeRelease);
+            CHECK(hostEvent.event.tick == 0);
+            CHECK(hostEvent.event.taskId == 3);
+        }
+        events++;
+    }
     CHECK(events >= 6); /* At least 2 jobs: release, start, complete each */
-    CHECK(EventQueuePop(queue, &hostEvent));
-    CHECK(hostEvent.nodeId == 1);
-    CHECK(hostEvent.event.type == EventTypeRelease);
-    CHECK(hostEvent.event.tick == 0);
-    CHECK(hostEvent.event.taskId == 3);
 
     stats = DriverReadStats(&control->channels[0]);
     CHECK(stats.portOpen);
     CHECK(stats.tickReports >= 3);
+    CHECK(stats.tickReports == reports);
+    CHECK(stats.lastReportUs > 0);
     CHECK(stats.eventsReceived == events);
     CHECK(stats.badFrames == 0);
     CHECK(stats.retransmissions == 0);

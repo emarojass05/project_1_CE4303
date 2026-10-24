@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 /* Waits on a semaphore and retries when a signal interrupts the wait */
@@ -207,4 +208,11 @@ size_t EventQueueCount(EventQueue *queue)
     count = (size_t)(queue->head - queue->tail);
     sem_post(&queue->mutex);
     return count;
+}
+uint64_t HostClockUs(void)
+{
+    struct timespec now;
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (uint64_t)now.tv_sec * 1000000u + (uint64_t)now.tv_nsec / 1000u;
 }

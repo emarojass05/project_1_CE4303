@@ -1,6 +1,7 @@
 #ifndef TASKFILE_H
 #define TASKFILE_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -40,6 +41,11 @@ typedef enum {
    Rules beyond TaskValidate: id >= 1 (0 means "no task" in the protocol),
    ids are unique, and D <= T. */
 TaskFileStatus TaskFileLoadStream(FILE *input, TaskFile *result);
+
+/* Parses one task written as in the file ("id,type,W,T,D,criticality"),
+   with the same rules except the check for repeated ids, which is left to
+   the caller. Used by the manual mode. error may be NULL. */
+bool TaskFileParseTask(const char *text, Task *outTask, ParseError *error);
 
 /* Same as TaskFileLoadStream, reading the file at path */
 TaskFileStatus TaskFileLoadFile(const char *path, TaskFile *result);

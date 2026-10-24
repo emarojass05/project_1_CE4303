@@ -32,6 +32,7 @@ typedef struct {
     uint8_t waitingSeq;
     bool haveReply;
     Frame reply;
+    uint64_t replyUs; /* Arrival of the reply */
 } Driver;
 
 static bool WaitSemaphore(sem_t *semaphore)
@@ -189,6 +190,8 @@ static void HandleEvent(Driver *driver, const Frame *frame)
     UnlockStats(driver);
 
     /* An unknown eventType reaches the report, which counts it as ignored */
+    memset(&hostEvent, 0, sizeof(hostEvent));
+    hostEvent.kind = HostEventNode;
     hostEvent.nodeId = driver->channel->nodeId;
     hostEvent.event.type = (EventType)message.eventType;
     hostEvent.event.tick = message.tick;
@@ -200,8 +203,13 @@ static void HandleEvent(Driver *driver, const Frame *frame)
 static void HandleTickReport(Driver *driver, const Frame *frame)
 {
     TickReportMessage report;
+    HostEvent hostEvent;
+    uint64_t arrival = HostClockUs();
 
     if (ProtocolUnpackTickReport(frame, &report) != ProtocolStatusOk) {
+        LockStats(driver);
+        driver->channel->stats.badEvents++;
+        UnlockStats(driver);
         return;
     }
     LockStats(driver);
@@ -210,7 +218,18 @@ static void HandleTickReport(Driver *driver, const Frame *frame)
     driver->channel->stats.lastRunningTask = report.runningTaskId;
     driver->channel->stats.missCount = report.missCount;
     driver->channel->stats.droppedEvents = report.droppedEvents;
+    driver->channel->stats.lastReportUs = arrival;
     UnlockStats(driver);
+
+    /* The report measures the skew between nodes from the arrival times (F12) */
+    memset(&hostEvent, 0, sizeof(hostEvent));
+    hostEvent.kind = HostEventTickReport;
+    hostEvent.nodeId = driver->channel->nodeId;
+    hostEvent.event.tick = report.tick;
+    hostEvent.event.taskId = report.runningTaskId;
+    hostEvent.event.value = report.missCount;
+    hostEvent.hostUs = arrival;
+    (void)EventQueuePush(driver->queue, &hostEvent);
 }
 
 /* Hands an Ack or CalibResponse to the main thread if it is the awaited one */
@@ -219,6 +238,7 @@ static void HandleReply(Driver *driver, const Frame *frame)
     pthread_mutex_lock(&driver->mutex);
     if (driver->waiting && !driver->haveReply && frame->seq == driver->waitingSeq) {
         driver->reply = *frame;
+        driver->replyUs = HostClockUs();
         driver->haveReply = true;
         pthread_cond_signal(&driver->replied);
     }
@@ -495,6 +515,7 @@ int DriverRun(DriverChannel *channel, EventQueue *queue)
         }
         channel->result = SendRequest(&driver, channel->request, channel->timeoutMs,
                                       channel->attempts, &channel->reply);
+        channel->replyUs = channel->result == DriverResultOk ? driver.replyUs : HostClockUs();
         if (channel->request.type == MessageTypeStop && channel->result == DriverResultOk) {
             /* The node sent its last events before this Ack */
             atomic_store(&driver.collecting, false);

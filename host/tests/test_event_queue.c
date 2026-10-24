@@ -29,6 +29,8 @@ static HostEvent MakeHostEvent(uint32_t nodeId, uint32_t sequence)
 {
     HostEvent hostEvent;
 
+    memset(&hostEvent, 0, sizeof(hostEvent));
+    hostEvent.kind = HostEventNode;
     hostEvent.nodeId = nodeId;
     hostEvent.event.type = EventTypeStart;
     hostEvent.event.tick = sequence;

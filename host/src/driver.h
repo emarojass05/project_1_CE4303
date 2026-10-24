@@ -51,6 +51,7 @@ typedef struct {
     uint32_t retransmissions; /* Requests sent again after a timeout */
     uint32_t staleFrames;     /* Events and tick reports outside a run, dropped */
     uint32_t portOpen;        /* Nonzero while the port works */
+    uint64_t lastReportUs;    /* HostClockUs() when the last TickReport arrived */
 } DriverStats;
 
 typedef struct {
@@ -69,6 +70,7 @@ typedef struct {
     /* Result, written by the driver before posting commandDone */
     DriverResult result;
     Frame reply;
+    uint64_t replyUs; /* HostClockUs() when the command ended */
 
     DriverStats stats; /* Guarded by statsMutex */
 } DriverChannel;
