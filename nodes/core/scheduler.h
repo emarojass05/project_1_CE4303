@@ -49,6 +49,9 @@ typedef struct {
     SchedulerAlgorithm algorithm;
     uint32_t tick;      /* Tick the next call to SchedulerTick will process */
     int runningIndex;   /* Index in tasks, or SchedulerNoTask */
+    int lastRunIndex;   /* Index that ran during the last processed tick, or
+                           SchedulerNoTask; unlike runningIndex it keeps a job
+                           that finished in that tick, so the LEDs can show it */
     uint32_t missCount; /* Jobs aborted for missing their deadline */
     EventBuffer *events; /* Where the scheduler reports what it does */
 } Scheduler;
