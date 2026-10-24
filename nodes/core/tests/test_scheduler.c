@@ -132,6 +132,69 @@ static void TestTieBreakByCriticalityThenId(void)
     CHECK(FirstStartedId(&bigId, &smallId) == 3);
 }
 
+/* In RMS a task released later with the same period and a smaller id must
+   preempt the running one: priorities never depend on who is running */
+static void TestRmsTieIsFixedPriority(void)
+{
+    EventBuffer buffer;
+    Scheduler scheduler;
+    Task bigId = MakeTask(5, TaskTypePeriodic, 10, 10, 1);
+    Task smallId = MakeTask(3, TaskTypePeriodic, 10, 10, 1);
+
+    EventBufferInit(&buffer);
+    CHECK(SchedulerInit(&scheduler, SchedulerAlgorithmRms, &buffer) == SchedulerStatusOk);
+    CHECK(SchedulerAddTask(&scheduler, &bigId, 3) == SchedulerStatusOk);
+    RunTicks(&scheduler, 1);
+    CHECK(SchedulerAddTask(&scheduler, &smallId, 3) == SchedulerStatusOk);
+    RunTicks(&scheduler, 1);
+
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 0, 5, 0));
+    CHECK(NextEventIs(&buffer, EventTypeStart, 0, 5, 0));
+    CHECK(NextEventIs(&buffer, EventTypeRelease, 1, 3, 0));
+    CHECK(NextEventIs(&buffer, EventTypePreempt, 1, 5, 3));
+    CHECK(NextEventIs(&buffer, EventTypeStart, 1, 3, 0));
+    CHECK(EventBufferCount(&buffer) == 0);
+}
+
+typedef struct {
+    unsigned int calls[8];
+    unsigned int total;
+} WorkLog;
+
+static void CountWork(uint32_t taskId, void *context)
+{
+    WorkLog *log = context;
+
+    if (taskId < 8) {
+        log->calls[taskId]++;
+    }
+    log->total++;
+}
+
+/* The work function runs once for every tick a task executes, never when idle */
+static void TestWorkRunsOncePerBusyTick(void)
+{
+    EventBuffer buffer;
+    Scheduler scheduler;
+    WorkLog log = { { 0 }, 0 };
+
+    EventBufferInit(&buffer);
+    CHECK(SchedulerInit(&scheduler, SchedulerAlgorithmRms, &buffer) == SchedulerStatusOk);
+    SchedulerSetWork(&scheduler, CountWork, &log);
+    LoadTwoTasks(&scheduler);
+    RunTicks(&scheduler, 8);
+
+    /* A runs 2 ticks in each of its 2 jobs, B runs 3 ticks once; 1 tick idle */
+    CHECK(log.calls[1] == 4);
+    CHECK(log.calls[2] == 3);
+    CHECK(log.total == 7);
+
+    SchedulerSetWork(&scheduler, NULL, NULL);
+    RunTicks(&scheduler, 8);
+    CHECK(log.total == 7);
+    SchedulerSetWork(NULL, CountWork, &log);
+}
+
 static void TestEdfFullLoadMeetsDeadlines(void)
 {
     EventBuffer buffer;
@@ -406,6 +469,8 @@ int main(void)
     TestRmsPreemption();
     TestEdfTieKeepsRunningTask();
     TestTieBreakByCriticalityThenId();
+    TestRmsTieIsFixedPriority();
+    TestWorkRunsOncePerBusyTick();
     TestEdfFullLoadMeetsDeadlines();
     TestEightTasksRunInIdOrder();
     TestSporadicRelease();

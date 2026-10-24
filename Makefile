@@ -12,6 +12,11 @@
 #   make esp32-monitor  abre la consola serial (salir con Ctrl+])
 #   make esp32-run      carga y abre la consola
 #   Otro puerto: make esp32-run PORT=/dev/ttyACM0
+#
+# Nodo Raspberry Pi Pico (requiere el Pico SDK en PICO_SDK_PATH y gcc-arm-none-eabi):
+#   make pico           compila el firmware (nodes/pico/build/rt_node_pico.uf2)
+#   make pico-flash     lo carga con picotool (la Pico en modo BOOTSEL)
+#   Sin picotool: copiar el .uf2 a la unidad RPI-RP2 que aparece en modo BOOTSEL
 
 CC       ?= gcc
 CFLAGS   := -std=c11 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -Wpedantic -g -O0
@@ -38,7 +43,7 @@ HOST_TESTS   := $(wildcard host/tests/test_*.c)
 NODE_TESTS   := $(wildcard nodes/core/tests/test_*.c)
 TEST_BINS    := $(patsubst %.c,$(BUILD)/%,$(COMMON_TESTS) $(HOST_TESTS) $(NODE_TESTS))
 
-.PHONY: all test asan demo clean esp32 esp32-flash esp32-monitor esp32-run
+.PHONY: all test asan demo clean esp32 esp32-flash esp32-monitor esp32-run pico pico-flash
 
 all: test demo
 
@@ -88,3 +93,14 @@ esp32-monitor:
 
 esp32-run:
 	$(IDF_PY) -p $(PORT) flash monitor
+
+# ---- Nodo Raspberry Pi Pico ----
+PICO_SDK_PATH ?= $(HOME)/pico/pico-sdk
+PICO_BUILD    := nodes/pico/build
+
+pico:
+	cmake -S nodes/pico -B $(PICO_BUILD) -DPICO_SDK_PATH="$(PICO_SDK_PATH)"
+	cmake --build $(PICO_BUILD)
+
+pico-flash: pico
+	picotool load -x $(PICO_BUILD)/rt_node_pico.uf2

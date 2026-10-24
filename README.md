@@ -5,6 +5,7 @@ que las ejecutan con un calendarizador local RMS o EDF.
 
 - Requisitos y reparto de trabajo: [`FEATS.md`](FEATS.md)
 - Plan por milestones: [`MILESTONES.md`](MILESTONES.md)
+- Nodos (conexiones, compilación y carga): [`docs/nodos.md`](docs/nodos.md)
 
 ## Estructura
 
@@ -16,6 +17,8 @@ que las ejecutan con un calendarizador local RMS o EDF.
 | `host/tests/` | Pruebas del host |
 | `nodes/core/` | Núcleo del calendarizador, independiente de la placa |
 | `nodes/core/tests/` | Pruebas del núcleo (corren en la PC) |
+| `nodes/app/` | Programa del nodo, común a las dos placas |
+| `nodes/ut/` | `ut.c` y `ut.h` del profesor, sin modificar |
 | `nodes/esp32/` | Capa específica del ESP32 (timer, GPIO, serial) |
 | `nodes/pico/` | Capa específica de la Raspberry Pi Pico |
 | `docs/` | Documentación (protocolo, experimentos, atributo TE) |

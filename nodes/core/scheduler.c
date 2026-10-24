@@ -37,11 +37,15 @@ static int HasPriority(const Scheduler *scheduler, size_t a, size_t b)
     if (firstKey != secondKey) {
         return firstKey < secondKey;
     }
-    if (scheduler->runningIndex == (int)a) {
-        return 1;
-    }
-    if (scheduler->runningIndex == (int)b) {
-        return 0;
+    /* Only EDF keeps the running job on a tie; RMS priorities must stay fixed,
+       so they depend on period, criticality and id only (docs/calendarizador.md) */
+    if (scheduler->algorithm == SchedulerAlgorithmEdf) {
+        if (scheduler->runningIndex == (int)a) {
+            return 1;
+        }
+        if (scheduler->runningIndex == (int)b) {
+            return 0;
+        }
     }
     if (first->task.criticality != second->task.criticality) {
         return first->task.criticality > second->task.criticality;
@@ -124,7 +128,18 @@ SchedulerStatus SchedulerInit(Scheduler *scheduler, SchedulerAlgorithm algorithm
     scheduler->lastRunIndex = SchedulerNoTask;
     scheduler->missCount = 0;
     scheduler->events = events;
+    scheduler->work = NULL;
+    scheduler->workContext = NULL;
     return SchedulerStatusOk;
+}
+
+void SchedulerSetWork(Scheduler *scheduler, SchedulerWorkFn work, void *context)
+{
+    if (scheduler == NULL) {
+        return;
+    }
+    scheduler->work = work;
+    scheduler->workContext = context;
 }
 
 SchedulerStatus SchedulerAddTask(Scheduler *scheduler, const Task *task, uint32_t cost)
@@ -213,6 +228,9 @@ SchedulerStatus SchedulerTick(Scheduler *scheduler)
             scheduler->runningIndex = selected;
         }
 
+        if (scheduler->work != NULL) {
+            scheduler->work(entry->task.id, scheduler->workContext);
+        }
         entry->remaining--;
         if (entry->remaining == 0) {
             entry->active = 0;

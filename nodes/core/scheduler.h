@@ -31,6 +31,9 @@ typedef enum {
     SchedulerStatusFull = -3             /* No room for another task */
 } SchedulerStatus;
 
+/* Runs one tick of real work for the task, e.g. sn calls to unidad_trabajo() */
+typedef void (*SchedulerWorkFn)(uint32_t taskId, void *context);
+
 /* A task together with the state of its current job */
 typedef struct {
     Task task;
@@ -54,11 +57,16 @@ typedef struct {
                            that finished in that tick, so the LEDs can show it */
     uint32_t missCount; /* Jobs aborted for missing their deadline */
     EventBuffer *events; /* Where the scheduler reports what it does */
+    SchedulerWorkFn work; /* Called once per tick for the task that runs, or NULL */
+    void *workContext;
 } Scheduler;
 
 /* Prepares an empty scheduler that reports into events */
 SchedulerStatus SchedulerInit(Scheduler *scheduler, SchedulerAlgorithm algorithm,
                               EventBuffer *events);
+
+/* Sets the function that executes the work of each tick; NULL disables it */
+void SchedulerSetWork(Scheduler *scheduler, SchedulerWorkFn work, void *context);
 
 /* Adds a task whose job costs cost ticks; periodic tasks release at the current tick */
 SchedulerStatus SchedulerAddTask(Scheduler *scheduler, const Task *task, uint32_t cost);
