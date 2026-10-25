@@ -45,4 +45,51 @@ Cada una se deja correr unos 30 s y se termina con `q`. La carga está calculada
 
 ## 2. First-Fit vs Worst-Fit
 
-Pendiente.
+**Objetivo.** Mostrar que las dos heurísticas de asignación producen repartos distintos con la misma carga, y qué consecuencias tiene cada una.
+
+**Montaje.** Los dos nodos juntos (ESP32 = nodo 1, sₙ = 61; Pico = nodo 2, sₙ = 86), EDF, tick de 10 ms, `config/exp_ff_wf_ff.conf` y `config/exp_ff_wf_wf.conf`, tareas en `tasks/exp_ff_wf.csv` (todas periódicas, D = T, criticidad 1):
+
+| Tarea | W | T = D | C en ESP32 | C en Pico |
+|---|---|---|---|---|
+| 1 | 400 | 20 | 7 | 5 |
+| 2 | 380 | 20 | 7 | 5 |
+| 3 | 330 | 20 | 6 | 4 |
+| 4 | 270 | 25 | 5 | 4 |
+| 5 | 150 | 25 | 3 | 2 |
+| 6 | 150 | 30 | 3 | 2 |
+
+First-Fit revisa los nodos del más rápido al más lento y deja la tarea en el primero que la acepta. Worst-Fit la deja en el nodo que queda con más capacidad libre.
+
+**Resultados** (`docs/resultados/exp_ff.txt` y `exp_wf.txt`):
+
+| | First-Fit | Worst-Fit |
+|---|---|---|
+| Tareas en el ESP32 | 6 | 2 y 4 |
+| Tareas en la Pico | 1, 2, 3, 4 y 5 | 1, 3, 5 y 6 |
+| U del ESP32 (teórica / medida) | 0.100 / 0.100 | 0.550 / 0.551 |
+| U de la Pico (teórica / medida) | 0.940 / 0.940 | 0.597 / 0.597 |
+| Tareas aceptadas | 6 de 6 | 6 de 6 |
+| Plazos perdidos | 0 | 0 |
+| Tiempo de respuesta máximo | 20 ticks (tarea 5, D = 25) | 13 ticks (tarea 6, D = 30) |
+| Holgura mínima (D − respuesta máxima) | 5 ticks | 11 ticks |
+| Desalojos | 0 | 0 |
+| Duración de la corrida | 107.3 s | 55.6 s |
+
+**Análisis.**
+
+- **First-Fit** concentra la carga en el nodo más rápido: la Pico queda con U = 0.94 y el ESP32 casi vacío (0.10). Todo se cumple, pero con poco margen: las tareas 3 y 5 terminan a 5 ticks de su plazo, y a la Pico le quedan 0.06 de capacidad libre.
+- **Worst-Fit** reparte la carga y deja los dos nodos entre 0.55 y 0.60. Los tiempos de respuesta bajan (máximo 13 ticks contra 20) y la holgura mínima sube a 11 ticks. Cada nodo conserva capacidad libre (0.45 en el ESP32 y 0.40 en la Pico) para tareas nuevas en modo manual o para recibir las de un nodo caído.
+- **Qué se paga.** Worst-Fit usa los dos nodos para una carga que cabría casi toda en la Pico, y manda trabajo al nodo más lento (las tareas 2 y 4 cuestan 7 y 5 ticks en el ESP32, contra 5 y 4 en la Pico).
+- **Enlace.** En ambas corridas hubo 0 tramas corruptas, 0 retransmisiones y 0 eventos perdidos.
+- **Desfase entre nodos.** −5.06 ms al inicio y −11.59 ms a los 106 s (deriva −62 ppm) en First-Fit; −2.83 ms y −6.12 ms a los 54 s (−61 ppm) en Worst-Fit. Coincide con las mediciones de `docs/host.md`.
+
+**Conclusión.** Con la misma carga, First-Fit deja un nodo casi saturado y otro casi vacío, y Worst-Fit reparte la carga y gana holgura en los plazos. Ninguna perdió plazos, porque ambas respetan U ≤ 1 en cada nodo. La diferencia está en el margen, no en que una cumpla y la otra no.
+
+**Cómo repetirlo:**
+
+```bash
+./build/bin/host config/exp_ff_wf_ff.conf | tee exp_ff.txt
+./build/bin/host config/exp_ff_wf_wf.conf | tee exp_wf.txt
+```
+
+Cada una se deja correr unos 30 s y se termina con `q`. La asignación se mantiene para sₙ del ESP32 entre 57 y 65 y de la Pico entre 82 y 90.
