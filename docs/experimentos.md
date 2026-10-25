@@ -93,3 +93,15 @@ First-Fit revisa los nodos del más rápido al más lento y deja la tarea en el 
 ```
 
 Cada una se deja correr unos 30 s y se termina con `q`. La asignación se mantiene para sₙ del ESP32 entre 57 y 65 y de la Pico entre 82 y 90.
+
+## 4. Corridas finales de M5 (gate)
+
+Tres corridas completas seguidas con el ESP32 y la Pico conectados (`config/ejemplo.conf`). Reportes completos en `docs/resultados/`.
+
+| Corrida | Archivo | Qué se probó | Resultado |
+|---|---|---|---|
+| Normal | `m5_demo_normal.txt` | Carga automática, `s`, `a` y `q` | 0 plazos perdidos, 0 tramas corruptas, 0 retransmisiones |
+| Falla por comando | `m5_demo_k.txt` | `k 2` durante la ejecución | Nodo declarado caído en 458-485 ms; reubicación y rechazo por criticidad |
+| Falla por cable | `m5_demo_cable.txt` | Cable USB desconectado en marcha | Nodo declarado caído en 458 ms; la tarea 3 reinició en el nodo 2 y las tareas 4 y 6 se rechazaron por falta de capacidad |
+
+En las tres, `q` generó el reporte y cerró los procesos y puertos sin segfault. El drift entre nodos quedó entre -61 y -65 ppm.

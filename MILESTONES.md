@@ -70,8 +70,8 @@ Reglas de trabajo:
 ## M5 — Pruebas, experimentos y robustez (20–21 oct)
 
 - [x] **P1** Experimento RMS vs EDF (carga que solo cumple EDF) · prueba de estrés del nodo (8 tareas)
-- [ ] **P2** Pruebas de robustez del protocolo (cable desconectado, tramas corruptas)
-- [ ] **P3** Pruebas de entradas inválidas · prueba de falla de nodo por cable y por comando
+- [x] **P2** Pruebas de robustez del protocolo (cable desconectado, tramas corruptas)
+- [x] **P3** Pruebas de entradas inválidas · prueba de falla de nodo por cable y por comando
 - [x] **P4** Experimento First-Fit vs Worst-Fit (carga con asignaciones distintas) · Valgrind/ASan, liberación de recursos y cierre de puertos · Makefile final
 
 **Gate M5:** cero segfaults en 3 corridas completas seguidas · ambos experimentos con resultados · tecla `q` genera el reporte y cierra limpio.
