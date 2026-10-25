@@ -376,9 +376,10 @@ static bool Assign(Planner *planner, uint32_t *rejected)
         fprintf(planner->out, "Assignment failed\n");
         return false;
     }
-    fprintf(planner->out, "Assignment (%s, %s):\n",
+    fprintf(planner->out, "Assignment (%s, %s%s):\n",
             planner->config->algorithm == AssignAlgorithmEdf ? "EDF" : "RMS",
-            planner->config->heuristic == AssignHeuristicFirstFit ? "first-fit" : "worst-fit");
+            planner->config->heuristic == AssignHeuristicFirstFit ? "first-fit" : "worst-fit",
+            planner->config->admissionCheck ? "" : ", admission test OFF: U <= 1 only");
     for (i = 0; i < planner->taskCount; i++) {
         PlannerTask *entry = &planner->tasks[i];
 
@@ -1063,6 +1064,7 @@ int PlannerRun(const HostConfig *config, const TaskFile *tasks, int inputFd, FIL
     }
     memset(&planner, 0, sizeof(planner));
     planner.config = config;
+    AssignSetAdmissionCheck(config->admissionCheck);
     planner.nodeCount = (uint32_t)config->portCount;
     planner.out = out;
     for (i = 0; i < tasks->taskCount; i++) {

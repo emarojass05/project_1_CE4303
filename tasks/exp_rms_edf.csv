@@ -1,0 +1,9 @@
+# Experimento RMS vs EDF (F14): carga que solo cumple EDF.
+# Un solo nodo, el ESP32 (sn ~61). Con W = 110 y 220 el costo es C = 2 y C = 4
+# ticks para cualquier sn entre 55 y 73: U = 2/5 + 4/7 = 0.971. No sirve para
+# la Pico (sn ~86 da C = 3 en la tarea 2 y RMS si cumple).
+# EDF acepta (U <= 1). RMS la rechazaria (cota de 2 tareas = 0.828) y, forzada
+# con admission = off, la tarea 2 pierde plazos.
+id,tipo,W,T,D,criticidad
+1,P,110,5,5,1
+2,P,220,7,7,1

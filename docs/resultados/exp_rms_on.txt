@@ -1,0 +1,52 @@
+2 task(s) from tasks/exp_rms_edf.csv, 1 node(s)
+Node 1 (/dev/ttyUSB0): sn = 61 work units per tick of 10 ms
+Assignment (RMS, first-fit):
+  task 1: rejected, fails the admission test on every node
+  task 2: node 1, C = 4 ticks, U = 0.571
+Running. Press q to stop, h for the other commands.
+
+Stopping the nodes...
+===== Report =====
+Run: RMS, first-fit, tick 10 ms, 1 node(s), tick report every 10 ticks, down after 3 missed reports
+Length: 4418 ticks (44.18 s)
+Events received: 1895
+Events ignored: 0
+
+--- Accepted and rejected tasks ---
+  [   0.00 s] task 1 (P, W=110, T=5, D=5, crit=1, task file): rejected, fails the admission test on every node
+  [   0.00 s] task 2 (P, W=220, T=7, D=7, crit=1, task file): accepted on node 1, C = 4, U = 0.571
+  1 accepted, 1 rejected
+
+--- Nodes ---
+Node 1 (/dev/ttyUSB0): sn 61
+  Utilization: theoretical 0.571 (bound 1.000, 1 task(s) at the end), measured 0.572 (2525 busy of 4418 ticks)
+  Task switches: 632 (0 preemptions)
+
+--- Tasks: releases, execution, deadlines and failures ---
+Rel: jobs released (periodic, or sporadic accepted)  Ign: sporadic releases ignored (before the minimum interval)
+Run: ticks executed  Resp: response time in ticks (release to end)
+Node 1:
+  Task  Type Rel    Start  Done   Miss  Abort Preem Ign  Run     MinRsp AvgRsp MaxRsp U teo  U med 
+  2     P    632    632    631    0     0     0     0    2525    4      4.0    4      0.571  0.572 
+
+--- Sporadic tasks: response latency ---
+No sporadic task ran
+
+--- Gantt chart per node ---
+# running   - released, waiting   ! deadline missed (job aborted)   . no job
+Node 1, ticks 0 to 99:
+  tick   0         10        20        30        40        50        60        70        80        90        
+  T2     ####...####...####...####...####...####...####...####...####...####...####...####...####...####...##
+Node 1, last ticks 4318 to 4417:
+  tick     4320      4330      4340      4350      4360      4370      4380      4390      4400      4410    
+  T2     .####...####...####...####...####...####...####...####...####...####...####...####...####...####...#
+
+--- Task switches and deadline misses (first 20 per node) ---
+Node 1 switches: 0:idle>2 7:idle>2 14:idle>2 21:idle>2 28:idle>2 35:idle>2 42:idle>2 49:idle>2 56:idle>2 63:idle>2 70:idle>2 77:idle>2 84:idle>2 91:idle>2 98:idle>2 105:idle>2 112:idle>2 119:idle>2 126:idle>2 133:idle>2
+Node 1 misses: none
+
+--- Link ---
+Node 1: frames 2342, events 1895, corrupt frames 0, tick reports 441, misses 0, dropped events 0, retransmissions 0, leftovers of an earlier run 0
+
+--- Skew between nodes (F12) ---
+Tick zero of each node estimated by the host as arrival - tick x tick_ms, smallest value of each 10 tick reports

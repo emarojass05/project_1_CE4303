@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -32,6 +33,7 @@ typedef struct {
     uint32_t tickReportEvery;         /* Node sends a tick report every N ticks */
     uint32_t missedReportsForFailure; /* Consecutive missing reports that mark a node as down */
     char tasksFile[ConfigPathMaxLength];
+    bool admissionCheck; /* false: place tasks without the schedulability test (experiments only) */
 } HostConfig;
 
 typedef enum {

@@ -105,6 +105,19 @@ static void TestDefaultsForOptionalKeys(void)
     CHECK(config.tickReportEvery == ConfigDefaultTickReportEvery);
     CHECK(config.missedReportsForFailure == ConfigDefaultMissedReports);
     CHECK(config.portCount == 1);
+    CHECK(config.admissionCheck);
+}
+
+static void TestAdmissionKey(void)
+{
+    HostConfig config;
+    ParseError error = { 0 };
+
+    CHECK(LoadText(REQUIRED_KEYS "admission = off\n", &config, &error) == ConfigStatusOk);
+    CHECK(!config.admissionCheck);
+    CHECK(LoadText(REQUIRED_KEYS "admission = ON\n", &config, &error) == ConfigStatusOk);
+    CHECK(config.admissionCheck);
+    CHECK_REJECTED("admission = maybe\n", 1, "on or off");
 }
 
 static void TestLastLineWithoutNewline(void)
@@ -256,6 +269,7 @@ int main(void)
 {
     TestFullConfig();
     TestDefaultsForOptionalKeys();
+    TestAdmissionKey();
     TestLastLineWithoutNewline();
     TestMissingRequiredKeys();
     TestMalformedLines();
