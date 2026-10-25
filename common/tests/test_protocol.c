@@ -63,7 +63,7 @@ static Frame ThroughWire(const Frame *frame)
 
 static Frame SampleFrame(uint8_t seq)
 {
-    Frame frame;
+    Frame frame = { 0 };
     TickReportMessage report = { .tick = 1000, .runningTaskId = 3, .droppedEvents = 0,
                                  .missCount = 1 };
 
@@ -74,7 +74,7 @@ static Frame SampleFrame(uint8_t seq)
 
 static void TestWireLayoutIsLittleEndianWithCrcHighFirst(void)
 {
-    Frame frame;
+    Frame frame = { 0 };
     CalibRequestMessage request = { .tickUs = 10000 };
 
     CHECK(ProtocolPackCalibRequest(&request, &frame) == ProtocolStatusOk);
@@ -92,7 +92,7 @@ static void TestWireLayoutIsLittleEndianWithCrcHighFirst(void)
 
 static void TestCalibrationRoundTrip(void)
 {
-    Frame frame;
+    Frame frame = { 0 };
     CalibRequestMessage request = { .tickUs = 10000 }, requestOut = { 0 };
     CalibResponseMessage response = { .unitsPerTick = 0xDEADBEEF }, responseOut = { 0 };
 
@@ -111,7 +111,7 @@ static void TestCalibrationRoundTrip(void)
 
 static void TestDeployRoundTrip(void)
 {
-    Frame frame;
+    Frame frame = { 0 };
     DeployConfigMessage config = { .algorithm = ProtocolAlgorithmEdf, .tickReportEvery = 500 };
     DeployConfigMessage configOut = { 0 };
     DeployTaskMessage task = { .id = 7, .type = ProtocolTaskSporadic, .cost = 3, .period = 50,
@@ -132,7 +132,7 @@ static void TestDeployRoundTrip(void)
 
 static void TestRuntimeMessagesRoundTrip(void)
 {
-    Frame frame;
+    Frame frame = { 0 };
     EventMessage event = { .eventType = 4, .tick = 123456, .taskId = 2, .value = 9 };
     EventMessage eventOut = { 0 };
     TickReportMessage reportOut = { 0 };
@@ -164,7 +164,7 @@ static void TestRuntimeMessagesRoundTrip(void)
 
 static void TestStartAndStopCarryNoPayload(void)
 {
-    Frame frame;
+    Frame frame = { 0 };
 
     CHECK(ProtocolPackEmpty(MessageTypeStart, &frame) == ProtocolStatusOk);
     CHECK(frame.length == 0);

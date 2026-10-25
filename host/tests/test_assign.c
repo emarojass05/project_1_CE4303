@@ -290,4 +290,4 @@ int main(void)
     }
     printf("test_assign: %d failure(s)\n", failureCount);
     return 1;
-}
+}

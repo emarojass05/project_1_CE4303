@@ -7,6 +7,7 @@
 #   make fake    compila el nodo simulado (build/bin/fake_node) para probar sin placas
 #   make test    compila y corre todas las pruebas
 #   make asan    igual, pero con AddressSanitizer + UBSan (detecta segfaults)
+#   make valgrind  corre todas las pruebas bajo Valgrind (fugas y memoria sin inicializar)
 #   make clean   borra las carpetas de compilacion
 #
 # Nodo ESP32 (requiere ESP-IDF instalado en IDF_PATH):
@@ -49,7 +50,7 @@ HOST_TESTS   := $(wildcard host/tests/test_*.c)
 NODE_TESTS   := $(wildcard nodes/core/tests/test_*.c)
 TEST_BINS    := $(patsubst %.c,$(BUILD)/%,$(COMMON_TESTS) $(HOST_TESTS) $(NODE_TESTS))
 
-.PHONY: all test asan host run fake clean esp32 esp32-flash esp32-monitor esp32-run pico pico-flash
+.PHONY: all test asan valgrind host run fake clean esp32 esp32-flash esp32-monitor esp32-run pico pico-flash
 
 all: test host fake
 
@@ -71,6 +72,12 @@ $(BUILD)/nodes/core/tests/%: nodes/core/tests/%.c $(NODE_LIB)
 
 asan:
 	$(MAKE) test SANITIZE=1
+
+# Cada prueba bajo Valgrind; falla si hay errores de memoria o fugas
+valgrind: $(TEST_BINS)
+	@for t in $(TEST_BINS); do echo "== valgrind $$t"; \
+		valgrind -q --leak-check=full --error-exitcode=1 ./$$t || exit 1; done
+	@echo "OK: valgrind sin errores en $(words $(TEST_BINS)) programa(s) de prueba"
 
 # Programa del host: ./build/bin/host [-v] [config]
 host: $(BUILD)/bin/host

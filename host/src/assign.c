@@ -274,4 +274,4 @@ AssignStatus AssignTasks(const Task *tasks, size_t taskCount,
         }
     }
     return AssignStatusOk;
-}
+}

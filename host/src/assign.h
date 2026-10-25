@@ -78,4 +78,4 @@ AssignStatus AssignTasks(const Task *tasks, size_t taskCount,
                          AssignAlgorithm algorithm, AssignHeuristic heuristic,
                          Assignment *outAssignments, NodeState *outNodes);
 
-#endif /* ASSIGN_H */
+#endif /* ASSIGN_H */
