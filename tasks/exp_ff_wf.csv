@@ -1,0 +1,13 @@
+# Experimento First-Fit vs Worst-Fit (F14): carga que produce asignaciones distintas.
+# Dos nodos, ESP32 (sn ~61) y Pico (sn ~86), EDF. Costos para sn = 61 / 86:
+#   tarea 1: C = 7 / 5    tarea 2: C = 7 / 5    tarea 3: C = 6 / 4
+#   tarea 4: C = 5 / 4    tarea 5: C = 3 / 2    tarea 6: C = 3 / 2
+# First-Fit llena primero la Pico (nodo mas rapido); Worst-Fit reparte la carga.
+# Vale para sn del ESP32 entre 57 y 65 y de la Pico entre 82 y 90.
+id,tipo,W,T,D,criticidad
+1,P,400,20,20,1
+2,P,380,20,20,1
+3,P,330,20,20,1
+4,P,270,25,25,1
+5,P,150,25,25,1
+6,P,150,30,30,1
