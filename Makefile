@@ -4,6 +4,7 @@
 #   make         compila el host (build/bin/host) y corre todas las pruebas
 #   make host    compila solo el host
 #   make run     corre el host con config/ejemplo.conf (CONFIG=otro.conf para cambiarlo)
+#   make help    lista todos los atajos de corrida (run-edf, run-ff, run-profesor, ...)
 #   make fake    compila el nodo simulado (build/bin/fake_node) para probar sin placas
 #   make test    compila y corre todas las pruebas
 #   make asan    igual, pero con AddressSanitizer + UBSan (detecta segfaults)
@@ -50,7 +51,7 @@ HOST_TESTS   := $(wildcard host/tests/test_*.c)
 NODE_TESTS   := $(wildcard nodes/core/tests/test_*.c)
 TEST_BINS    := $(patsubst %.c,$(BUILD)/%,$(COMMON_TESTS) $(HOST_TESTS) $(NODE_TESTS))
 
-.PHONY: all test asan valgrind host run fake clean esp32 esp32-flash esp32-monitor esp32-run pico pico-flash
+.PHONY: all test asan valgrind host run fake clean help fuzz run-rms-on run-rms run-edf run-ff run-wf run-estres run-profesor esp32 esp32-flash esp32-monitor esp32-run pico pico-flash
 
 all: test host fake
 
@@ -87,8 +88,53 @@ $(BUILD)/bin/host: host/src/main.c $(HOST_LIB)
 	$(CC) $(CFLAGS) $(INCLUDES) $^ -o $@ -lm -pthread -lrt
 
 CONFIG ?= config/ejemplo.conf
+# Corre el host. Si la sesion no tiene el grupo dialout, usa "sg dialout -c".
+# HOSTFLAGS=-v imprime cada evento al llegar.
+HOSTFLAGS ?=
+RUNHOST = if command -v sg >/dev/null 2>&1 && ! id -nG | grep -qw dialout; then sg dialout -c "./$(BUILD)/bin/host $(HOSTFLAGS) $(1)"; else ./$(BUILD)/bin/host $(HOSTFLAGS) $(1); fi
+
 run: $(BUILD)/bin/host
-	./$(BUILD)/bin/host $(CONFIG)
+	@$(call RUNHOST,$(CONFIG))
+
+# Atajos de corrida (cada uno termina con q)
+run-rms-on: $(BUILD)/bin/host   # RMS con admision activa (rechaza la tarea 1)
+	@$(call RUNHOST,config/exp_rms_edf_rms_on.conf)
+
+run-rms: $(BUILD)/bin/host      # RMS sin admision: pierde plazos
+	@$(call RUNHOST,config/exp_rms_edf_rms.conf)
+
+run-edf: $(BUILD)/bin/host      # EDF con la misma carga: 0 plazos perdidos
+	@$(call RUNHOST,config/exp_rms_edf_edf.conf)
+
+run-ff: $(BUILD)/bin/host       # First-Fit con las dos placas
+	@$(call RUNHOST,config/exp_ff_wf_ff.conf)
+
+run-wf: $(BUILD)/bin/host       # Worst-Fit con las dos placas
+	@$(call RUNHOST,config/exp_ff_wf_wf.conf)
+
+run-estres: $(BUILD)/bin/host   # 8 tareas en el ESP32
+	@$(call RUNHOST,config/estres_8tareas.conf)
+
+run-profesor: $(BUILD)/bin/host # tareas del profesor (config/profesor.conf)
+	@$(call RUNHOST,config/profesor.conf)
+
+# Prueba de comandos al azar con nodos simulados (N corridas: make fuzz N=20)
+N ?= 10
+fuzz: $(BUILD)/bin/host $(BUILD)/bin/fake_node
+	tools/fuzz_comandos.sh $(N)
+
+help:
+	@echo "Compilar y probar:  make | make test | make asan | make valgrind | make fuzz"
+	@echo "Correr el host (placas conectadas; HOSTFLAGS=-v para ver eventos):"
+	@echo "  make run           config/ejemplo.conf (o CONFIG=otro.conf)"
+	@echo "  make run-rms-on    RMS con admision activa"
+	@echo "  make run-rms       RMS sin admision (pierde plazos)"
+	@echo "  make run-edf       EDF con la misma carga (0 plazos perdidos)"
+	@echo "  make run-ff        First-Fit"
+	@echo "  make run-wf        Worst-Fit"
+	@echo "  make run-estres    8 tareas en el ESP32"
+	@echo "  make run-profesor  tareas del profesor (config/profesor.conf)"
+	@echo "Cargar nodos: make esp32-run | make pico | make pico-flash"
 
 # Nodo simulado: ./build/bin/fake_node [sn] imprime el puerto que hay que poner en "ports"
 fake: $(BUILD)/bin/fake_node
