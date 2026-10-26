@@ -55,6 +55,11 @@ typedef struct {
     AssignRejectReason reason;
 } Assignment;
 
+/* Turns the schedulability test on (default) or off. Off is for experiments
+   only: every task that keeps the node at U <= 1 is accepted, whatever the
+   algorithm, so RMS can be run on a load that only EDF can meet. */
+void AssignSetAdmissionCheck(bool enabled);
+
 /* Resets a node state to empty with the given speed */
 void AssignInitNode(NodeState *state, NodeInfo info);
 
@@ -73,4 +78,4 @@ AssignStatus AssignTasks(const Task *tasks, size_t taskCount,
                          AssignAlgorithm algorithm, AssignHeuristic heuristic,
                          Assignment *outAssignments, NodeState *outNodes);
 
-#endif /* ASSIGN_H */
+#endif /* ASSIGN_H */

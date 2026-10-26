@@ -9,9 +9,17 @@ typedef struct {
     uint32_t id;
 } SortEntry;
 
+/* Process-wide setting, written once at startup by the planner */
+static bool admissionCheck = true;
+
+void AssignSetAdmissionCheck(bool enabled)
+{
+    admissionCheck = enabled;
+}
+
 static bool AcceptsLoad(AssignAlgorithm algorithm, const LoadEntry *entries, size_t count)
 {
-    if (algorithm == AssignAlgorithmEdf) {
+    if (algorithm == AssignAlgorithmEdf || !admissionCheck) {
         return AdmissionAcceptsEdf(entries, count);
     }
     return AdmissionAcceptsRms(entries, count);
@@ -19,7 +27,8 @@ static bool AcceptsLoad(AssignAlgorithm algorithm, const LoadEntry *entries, siz
 
 static double FreeCapacity(AssignAlgorithm algorithm, const LoadEntry *entries, size_t count)
 {
-    double limit = (algorithm == AssignAlgorithmEdf) ? 1.0 : AdmissionRmsBound(count);
+    double limit = (algorithm == AssignAlgorithmEdf || !admissionCheck) ? 1.0
+                                                                       : AdmissionRmsBound(count);
     return limit - AdmissionUtilization(entries, count);
 }
 
@@ -265,4 +274,4 @@ AssignStatus AssignTasks(const Task *tasks, size_t taskCount,
         }
     }
     return AssignStatusOk;
-}
+}

@@ -53,6 +53,19 @@ static bool SetHeuristic(HostConfig *config, char *value, size_t line, ParseErro
     return true;
 }
 
+static bool SetAdmission(HostConfig *config, char *value, size_t line, ParseError *error)
+{
+    if (strcasecmp(value, "on") == 0) {
+        config->admissionCheck = true;
+    } else if (strcasecmp(value, "off") == 0) {
+        config->admissionCheck = false;
+    } else {
+        ParseErrorSet(error, line, "'admission' must be on or off, got '%s'", value);
+        return false;
+    }
+    return true;
+}
+
 static bool SetTickMs(HostConfig *config, char *value, size_t line, ParseError *error)
 {
     return SetNumber(&config->tickMs, value, 1, ConfigMaxTickMs, "tick_ms", line, error);
@@ -142,6 +155,7 @@ static const ConfigKey configKeys[] = {
     { "tick_report_every", SetTickReportEvery, false },
     { "missed_reports_for_failure", SetMissedReports, false },
     { "tasks_file", SetTasksFile, true },
+    { "admission", SetAdmission, false },
 };
 
 enum {
@@ -212,6 +226,7 @@ void ConfigSetDefaults(HostConfig *config)
     memset(config, 0, sizeof(*config));
     config->algorithm = AssignAlgorithmEdf;
     config->heuristic = AssignHeuristicFirstFit;
+    config->admissionCheck = true;
     config->tickMs = ConfigDefaultTickMs;
     config->tickReportEvery = ConfigDefaultTickReportEvery;
     config->missedReportsForFailure = ConfigDefaultMissedReports;

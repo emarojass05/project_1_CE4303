@@ -1,0 +1,15 @@
+# Prueba de estres del nodo (M5): 8 tareas en un solo nodo, 7 periodicas y 1 esporadica.
+# Pensada para el ESP32 (sn entre 57 y 65, ~61). Costos C en ticks:
+#   tarea 1: 2   tarea 2: 2   tarea 3: 3   tarea 4: 4
+#   tarea 5: 5   tarea 6: 4   tarea 7: 5   tarea 8 (esporadica): 2
+# U total = 0.2 + 0.1 + 0.1 + 0.1 + 0.1 + 0.16 + 0.1 + 0.02 = 0.88 con EDF.
+# Los LEDs muestran el id de la tarea en binario (la tarea 8 usa el cuarto LED).
+id,tipo,W,T,D,criticidad
+1,P,100,10,10,3
+2,P,100,20,20,1
+3,P,150,30,30,2
+4,P,210,40,40,4
+5,P,270,50,50,2
+6,P,210,25,25,5
+7,P,270,50,50,1
+8,S,100,100,50,5

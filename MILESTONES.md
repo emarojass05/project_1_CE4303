@@ -33,46 +33,46 @@ Reglas de trabajo:
 
 ## M1 — Fundación y contratos (8–10 oct)
 
-- [ ] **P1** F1 (parte 1): timer de hardware para el tick, integrar `ut.c`/`ut.h`, estructura de tarea como máquina de estados (API del scheduler)
-- [ ] **P2** F0: especificar trama y mensajes (en `docs/protocolo.md`) + librería CRC-16 compartida host/nodo con pruebas
-- [ ] **P3** F6: parser de configuración y de archivo de tareas con validación y pruebas de entradas inválidas
-- [ ] **P4** Estructura del repo (host/, nodes/, docs/, config/, tasks/), Makefile base, F9 (parte 1): prototipo de `shm_open`/`mmap` + semáforos POSIX entre procesos
+- [x] **P1** F1 (parte 1): timer de hardware para el tick, integrar `ut.c`/`ut.h`, estructura de tarea como máquina de estados (API del scheduler)
+- [x] **P2** F0: especificar trama y mensajes (en `docs/protocolo.md`) + librería CRC-16 compartida host/nodo con pruebas
+- [x] **P3** F6: parser de configuración y de archivo de tareas con validación y pruebas de entradas inválidas
+- [x] **P4** Estructura del repo (host/, nodes/, docs/, config/, tasks/), Makefile base, F9 (parte 1): prototipo de `shm_open`/`mmap` + semáforos POSIX entre procesos
 
 **Gate M1:** protocolo aprobado por los 4 · el tick corre en un ESP32 y en una Pico · parser pasa pruebas · el host compila con `make`.
 
 ## M2 — Componentes aislados (11–13 oct)
 
-- [ ] **P1** F1 (parte 2): RMS, EDF, desempate, 8 tareas, plazo perdido con aborto del trabajo (con tareas de prueba)
-- [ ] **P2** F5: LEDs en binario, LED de plazo perdido y botón · F3: búfer circular de eventos y transmisión en segundo plano
-- [ ] **P3** F7: costo C(i,n), orden por utilización, admisión EDF/RMS, First-Fit y Worst-Fit, rechazo con motivo (pruebas unitarias con sₙ simulado)
-- [ ] **P4** F9 (parte 2): cola de eventos acotada productor/consumidor en shm + semáforos, proceso de reporte que consume eventos de prueba, terminación con `q` sin fugas
+- [x] **P1** F1 (parte 2): RMS, EDF, desempate, 8 tareas, plazo perdido con aborto del trabajo (con tareas de prueba)
+- [x] **P2** F5: LEDs en binario, LED de plazo perdido y botón · F3: búfer circular de eventos y transmisión en segundo plano
+- [x] **P3** F7: costo C(i,n), orden por utilización, admisión EDF/RMS, First-Fit y Worst-Fit, rechazo con motivo (pruebas unitarias con sₙ simulado)
+- [x] **P4** F9 (parte 2): cola de eventos acotada productor/consumidor en shm + semáforos, proceso de reporte que consume eventos de prueba, terminación con `q` sin fugas
 
 **Gate M2:** el nodo ejecuta tareas de prueba y cumple/pierde plazos según lo esperado · las pruebas de admisión pasan · la cola IPC funciona sin busy waiting.
 
 ## M3 — Primer end-to-end (14–16 oct)
 
-- [ ] **P1** F2: calibración en el nodo (sₙ medido en cada ejecución) · recepción de tareas desplegadas y mensaje de inicio (tick cero)
-- [ ] **P2** F8: driver serial del host (puerto, tramas, CRC, ACK) y el lado receptor de tramas del nodo
-- [ ] **P3** F10 (modo automático): flujo completo calibración → costo → asignación → despliegue, integrando planificador y drivers
-- [ ] **P4** F9 (parte 3): planificador + un driver por nodo + proceso de reporte corriendo juntos, reporte básico en texto · conjuntos de tareas de ejemplo
+- [x] **P1** F2: calibración en el nodo (sₙ medido en cada ejecución) · recepción de tareas desplegadas y mensaje de inicio (tick cero)
+- [x] **P2** F8: driver serial del host (puerto, tramas, CRC, ACK) y el lado receptor de tramas del nodo
+- [x] **P3** F10 (modo automático): flujo completo calibración → costo → asignación → despliegue, integrando planificador y drivers
+- [x] **P4** F9 (parte 3): planificador + un driver por nodo + proceso de reporte corriendo juntos, reporte básico en texto · conjuntos de tareas de ejemplo
 
 **Gate M3:** demo con 2 nodos reales: el host calibra, asigna, despliega, inicia y el reporte muestra eventos.
 
 ## M4 — Funcionalidades completas (17–19 oct)
 
-- [ ] **P1** F4: tarea esporádica (botón, debounce, ISR mínima, intervalo mínimo, latencia)
-- [ ] **P2** F3: reporte de tick cada N ticks · F12: medición del desfase entre nodos · tramas corruptas descartadas y reportadas · el nodo sigue corriendo si el host cae
-- [ ] **P3** F11: detección de nodo caído, replanificación, rechazo por criticidad · F10 (modo manual): agregar tareas en ejecución
-- [ ] **P4** F13: reporte completo (Gantt por nodo, estadísticas por tarea, utilización teórica y medida, cambios de tarea, aceptadas/rechazadas, latencia esporádicas)
+- [x] **P1** F4: tarea esporádica (botón, debounce, ISR mínima, intervalo mínimo, latencia)
+- [x] **P2** F3: reporte de tick cada N ticks · F12: medición del desfase entre nodos · tramas corruptas descartadas y reportadas · el nodo sigue corriendo si el host cae
+- [x] **P3** F11: detección de nodo caído, replanificación, rechazo por criticidad · F10 (modo manual): agregar tareas en ejecución
+- [x] **P4** F13: reporte completo (Gantt por nodo, estadísticas por tarea, utilización teórica y medida, cambios de tarea, aceptadas/rechazadas, latencia esporádicas)
 
 **Gate M4:** todas las secciones de la rúbrica funcionan al menos una vez de punta a punta.
 
 ## M5 — Pruebas, experimentos y robustez (20–21 oct)
 
-- [ ] **P1** Experimento RMS vs EDF (carga que solo cumple EDF) · prueba de estrés del nodo (8 tareas)
-- [ ] **P2** Pruebas de robustez del protocolo (cable desconectado, tramas corruptas)
-- [ ] **P3** Pruebas de entradas inválidas · prueba de falla de nodo por cable y por comando
-- [ ] **P4** Experimento First-Fit vs Worst-Fit (carga con asignaciones distintas) · Valgrind/ASan, liberación de recursos y cierre de puertos · Makefile final
+- [x] **P1** Experimento RMS vs EDF (carga que solo cumple EDF) · prueba de estrés del nodo (8 tareas)
+- [x] **P2** Pruebas de robustez del protocolo (cable desconectado, tramas corruptas)
+- [x] **P3** Pruebas de entradas inválidas · prueba de falla de nodo por cable y por comando
+- [x] **P4** Experimento First-Fit vs Worst-Fit (carga con asignaciones distintas) · Valgrind/ASan, liberación de recursos y cierre de puertos · Makefile final
 
 **Gate M5:** cero segfaults en 3 corridas completas seguidas · ambos experimentos con resultados · tecla `q` genera el reporte y cierra limpio.
 

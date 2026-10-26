@@ -115,6 +115,33 @@ static void TestRmsRejectsWhatEdfAccepts(void)
     CHECK(result[1].accepted);
 }
 
+/* admission = off: RMS takes what only EDF could meet, but never U > 1 */
+static void TestAdmissionOff(void)
+{
+    Task tasks[2] = {
+        MakeTask(1, TaskTypePeriodic, 2, 5, 1),
+        MakeTask(2, TaskTypePeriodic, 4, 7, 1)
+    };
+    Task heavy = MakeTask(3, TaskTypePeriodic, 3, 10, 1); /* 0.971 + 0.3 > 1 */
+    NodeInfo nodes[1] = { MakeNode(1, 1) };
+    Assignment result[2];
+    NodeState states[1];
+    Assignment extra;
+
+    AssignSetAdmissionCheck(false);
+    CHECK(AssignTasks(tasks, 2, nodes, 1, AssignAlgorithmRms, AssignHeuristicFirstFit,
+                      result, states) == AssignStatusOk);
+    CHECK(result[0].accepted && result[1].accepted);
+    CHECK(AssignPlaceTask(states, 1, &heavy, AssignAlgorithmRms, AssignHeuristicFirstFit,
+                          &extra) == AssignStatusOk);
+    CHECK(!extra.accepted && extra.reason == AssignRejectNotSchedulable);
+
+    AssignSetAdmissionCheck(true);
+    CHECK(AssignTasks(tasks, 2, nodes, 1, AssignAlgorithmRms, AssignHeuristicFirstFit,
+                      result, NULL) == AssignStatusOk);
+    CHECK(!result[0].accepted);
+}
+
 static void TestSporadicLimit(void)
 {
     Task tasks[2] = {
@@ -249,6 +276,7 @@ int main(void)
     TestFirstFitPrefersFastestNode();
     TestNotSchedulable();
     TestRmsRejectsWhatEdfAccepts();
+    TestAdmissionOff();
     TestSporadicLimit();
     TestNodeFull();
     TestInvalidTaskAndUnusableNode();
@@ -262,4 +290,4 @@ int main(void)
     }
     printf("test_assign: %d failure(s)\n", failureCount);
     return 1;
-}
+}
