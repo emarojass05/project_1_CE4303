@@ -44,6 +44,7 @@ static const DemoStep demoSteps[] = {
 /* Write end of the pipe that SIGCHLD uses to wake the main process */
 static int wakeWriteFd = -1;
 
+/* Demo: SIGCHLD handler, wakes the main loop */
 static void OnChildExit(int signalNumber)
 {
     int savedErrno = errno;
@@ -54,6 +55,7 @@ static void OnChildExit(int signalNumber)
     errno = savedErrno;
 }
 
+/* Demo: sleeps without busy waiting */
 static void SleepMilliseconds(long milliseconds)
 {
     struct timespec pause;
@@ -63,7 +65,7 @@ static void SleepMilliseconds(long milliseconds)
     nanosleep(&pause, NULL);
 }
 
-/* Report process: counts events until the queue is closed and empty */
+/* Demo: report process, counts until queue closes */
 static int RunReporter(EventQueue *queue, FILE *out)
 {
     static Report report;
@@ -79,7 +81,7 @@ static int RunReporter(EventQueue *queue, FILE *out)
     return 0;
 }
 
-/* Producer process: plays the fake events until done or the queue closes */
+/* Demo: producer process, plays fake events */
 static int RunProducer(EventQueue *queue, uint32_t passes, long delayMilliseconds)
 {
     uint32_t sequence = 0;
@@ -108,7 +110,7 @@ static int RunProducer(EventQueue *queue, uint32_t passes, long delayMillisecond
     return 0;
 }
 
-/* Sleeps until q is typed, input ends, or a child exits */
+/* Demo: sleeps until q, EOF or child exit (poll) */
 static void WaitForStop(int inputFd, int wakeReadFd)
 {
     struct pollfd fds[2];
@@ -141,7 +143,7 @@ static void WaitForStop(int inputFd, int wakeReadFd)
     }
 }
 
-/* Waits for a child; returns 0 only if it exited with code 0 */
+/* Demo: waits for a child, 0 if clean */
 static int WaitForChild(pid_t child)
 {
     int status;
@@ -155,6 +157,7 @@ static int WaitForChild(pid_t child)
     return WEXITSTATUS(status);
 }
 
+/* Demo: creates queue, forks, waits, shuts down clean */
 int HostRunDemo(const char *queueName, int inputFd, FILE *out,
                 uint32_t passes, long eventDelayMilliseconds)
 {

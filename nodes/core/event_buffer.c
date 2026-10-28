@@ -3,6 +3,7 @@
 _Static_assert((EventBufferCapacity & (EventBufferCapacity - 1)) == 0,
                "EventBufferCapacity must be a power of two");
 
+/* Buffer: empties it and clears the drop counter */
 void EventBufferInit(EventBuffer *buffer)
 {
     if (buffer == NULL) {
@@ -19,6 +20,7 @@ void EventBufferInit(EventBuffer *buffer)
     atomic_init(&buffer->droppedCount, 0u);
 }
 
+/* Buffer: writes an event, drops it if full */
 bool EventBufferPush(EventBuffer *buffer, Event event)
 {
     if (buffer == NULL) {
@@ -40,6 +42,7 @@ bool EventBufferPush(EventBuffer *buffer, Event event)
     return true;
 }
 
+/* Buffer: reads the oldest event, false if empty */
 bool EventBufferPop(EventBuffer *buffer, Event *outEvent)
 {
     if (buffer == NULL || outEvent == NULL) {
@@ -58,6 +61,7 @@ bool EventBufferPop(EventBuffer *buffer, Event *outEvent)
     return true;
 }
 
+/* Buffer: number of stored events */
 size_t EventBufferCount(const EventBuffer *buffer)
 {
     if (buffer == NULL) {
@@ -68,6 +72,7 @@ size_t EventBufferCount(const EventBuffer *buffer)
     return (size_t)(head - tail);
 }
 
+/* Buffer: events lost because it was full */
 uint32_t EventBufferDroppedCount(const EventBuffer *buffer)
 {
     if (buffer == NULL) {

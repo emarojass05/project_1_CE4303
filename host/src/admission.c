@@ -5,6 +5,7 @@
 /* Absorbs floating point rounding when comparing against a limit */
 static const double AdmissionTolerance = 1e-9;
 
+/* Admission: sums cost / period of a task list */
 double AdmissionUtilization(const LoadEntry *entries, size_t count)
 {
     if (count == 0) {
@@ -24,6 +25,7 @@ double AdmissionUtilization(const LoadEntry *entries, size_t count)
     return total;
 }
 
+/* Admission: RMS utilization limit n(2^(1/n) - 1) */
 double AdmissionRmsBound(size_t count)
 {
     if (count == 0) {
@@ -33,6 +35,7 @@ double AdmissionRmsBound(size_t count)
     return taskCount * (pow(2.0, 1.0 / taskCount) - 1.0);
 }
 
+/* Admission: EDF test, accepts if utilization <= 1 */
 bool AdmissionAcceptsEdf(const LoadEntry *entries, size_t count)
 {
     double utilization = AdmissionUtilization(entries, count);
@@ -42,6 +45,7 @@ bool AdmissionAcceptsEdf(const LoadEntry *entries, size_t count)
     return utilization <= 1.0 + AdmissionTolerance;
 }
 
+/* Admission: RMS test, accepts if utilization <= bound */
 bool AdmissionAcceptsRms(const LoadEntry *entries, size_t count)
 {
     double utilization = AdmissionUtilization(entries, count);

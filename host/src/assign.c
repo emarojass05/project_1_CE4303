@@ -12,11 +12,13 @@ typedef struct {
 /* Process-wide setting, written once at startup by the planner */
 static bool admissionCheck = true;
 
+/* Assign: turns the admission test on or off */
 void AssignSetAdmissionCheck(bool enabled)
 {
     admissionCheck = enabled;
 }
 
+/* Assign: picks the EDF or RMS admission test */
 static bool AcceptsLoad(AssignAlgorithm algorithm, const LoadEntry *entries, size_t count)
 {
     if (algorithm == AssignAlgorithmEdf || !admissionCheck) {
@@ -25,6 +27,7 @@ static bool AcceptsLoad(AssignAlgorithm algorithm, const LoadEntry *entries, siz
     return AdmissionAcceptsRms(entries, count);
 }
 
+/* Assign: free utilization left in a node (Worst-Fit) */
 static double FreeCapacity(AssignAlgorithm algorithm, const LoadEntry *entries, size_t count)
 {
     double limit = (algorithm == AssignAlgorithmEdf || !admissionCheck) ? 1.0
@@ -32,7 +35,7 @@ static double FreeCapacity(AssignAlgorithm algorithm, const LoadEntry *entries, 
     return limit - AdmissionUtilization(entries, count);
 }
 
-/* Node indices from fastest to slowest; equal speeds keep input order */
+/* Assign: sorts node indices fastest first */
 static void OrderBySpeed(const NodeState *nodes, size_t nodeCount, size_t *order)
 {
     for (size_t i = 0; i < nodeCount; i++) {
@@ -46,7 +49,7 @@ static void OrderBySpeed(const NodeState *nodes, size_t nodeCount, size_t *order
     }
 }
 
-/* Utilization on the fastest node, or -1 when it cannot be computed */
+/* Assign: task weight on the fastest node */
 static double SortUtilization(const Task *task, uint32_t fastestSpeed)
 {
     uint32_t cost = 0;
@@ -60,7 +63,7 @@ static double SortUtilization(const Task *task, uint32_t fastestSpeed)
     return (double)cost / (double)task->period;
 }
 
-/* Higher utilization first, then higher criticality, lower id, lower index */
+/* Assign: sort order by weight, criticality, id, index */
 static int CompareSortEntries(const void *left, const void *right)
 {
     const SortEntry *a = left;
@@ -84,6 +87,7 @@ static int CompareSortEntries(const void *left, const void *right)
     return 0;
 }
 
+/* Assign: starts an empty node state */
 void AssignInitNode(NodeState *state, NodeInfo info)
 {
     if (state == NULL) {
@@ -98,6 +102,7 @@ void AssignInitNode(NodeState *state, NodeInfo info)
     }
 }
 
+/* Assign: tries every node for one task and picks by heuristic */
 AssignStatus AssignPlaceTask(NodeState *nodes, size_t nodeCount, const Task *task,
                              AssignAlgorithm algorithm, AssignHeuristic heuristic,
                              Assignment *outAssignment)
@@ -202,6 +207,7 @@ AssignStatus AssignPlaceTask(NodeState *nodes, size_t nodeCount, const Task *tas
     return AssignStatusOk;
 }
 
+/* Assign: adds an already admitted task to a node */
 bool AssignCommitTask(NodeState *node, const Task *task)
 {
     uint32_t cost = 0;
@@ -219,6 +225,7 @@ bool AssignCommitTask(NodeState *node, const Task *task)
     return true;
 }
 
+/* Assign: sorts tasks by weight and places them all */
 AssignStatus AssignTasks(const Task *tasks, size_t taskCount,
                          const NodeInfo *nodes, size_t nodeCount,
                          AssignAlgorithm algorithm, AssignHeuristic heuristic,

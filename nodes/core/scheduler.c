@@ -1,6 +1,6 @@
 #include "scheduler.h"
 
-/* Writes one event stamped with the current tick; a full buffer counts the drop */
+/* Scheduler: writes an event stamped with the tick */
 static void Emit(Scheduler *scheduler, EventType type, uint32_t taskId, uint32_t value)
 {
     Event event = { .type = type, .tick = scheduler->tick,
@@ -8,7 +8,7 @@ static void Emit(Scheduler *scheduler, EventType type, uint32_t taskId, uint32_t
     (void)EventBufferPush(scheduler->events, event);
 }
 
-/* Starts a new job of the task at the current tick */
+/* Scheduler: starts a new job */
 static void StartJob(const Scheduler *scheduler, SchedulerTask *entry)
 {
     entry->active = 1;
@@ -17,7 +17,7 @@ static void StartJob(const Scheduler *scheduler, SchedulerTask *entry)
     entry->absoluteDeadline = scheduler->tick + entry->task.deadline;
 }
 
-/* Smaller key means higher priority */
+/* Scheduler: priority key (period or deadline) */
 static uint32_t PriorityKey(const Scheduler *scheduler, const SchedulerTask *entry)
 {
     if (scheduler->algorithm == SchedulerAlgorithmEdf) {
@@ -26,7 +26,7 @@ static uint32_t PriorityKey(const Scheduler *scheduler, const SchedulerTask *ent
     return entry->task.period;
 }
 
-/* True when the task at index a wins over the task at index b */
+/* Scheduler: priority and tie-break between two tasks */
 static int HasPriority(const Scheduler *scheduler, size_t a, size_t b)
 {
     const SchedulerTask *first = &scheduler->tasks[a];
@@ -53,7 +53,7 @@ static int HasPriority(const Scheduler *scheduler, size_t a, size_t b)
     return first->task.id < second->task.id;
 }
 
-/* Aborts every pending job whose deadline has been reached */
+/* Scheduler: aborts jobs that missed their deadline */
 static void AbortLateJobs(Scheduler *scheduler)
 {
     size_t i;
@@ -75,7 +75,7 @@ static void AbortLateJobs(Scheduler *scheduler)
     }
 }
 
-/* Releases every periodic job that is due at the current tick */
+/* Scheduler: releases periodic jobs that are due */
 static void ReleasePeriodicJobs(Scheduler *scheduler)
 {
     size_t i;
@@ -95,7 +95,7 @@ static void ReleasePeriodicJobs(Scheduler *scheduler)
     }
 }
 
-/* Index of the active task with the highest priority, or SchedulerNoTask */
+/* Scheduler: picks the highest priority active task */
 static int SelectTask(const Scheduler *scheduler)
 {
     int best = SchedulerNoTask;
@@ -112,6 +112,7 @@ static int SelectTask(const Scheduler *scheduler)
     return best;
 }
 
+/* Scheduler: prepares an empty scheduler (RMS or EDF) */
 SchedulerStatus SchedulerInit(Scheduler *scheduler, SchedulerAlgorithm algorithm,
                               EventBuffer *events)
 {
@@ -133,6 +134,7 @@ SchedulerStatus SchedulerInit(Scheduler *scheduler, SchedulerAlgorithm algorithm
     return SchedulerStatusOk;
 }
 
+/* Scheduler: sets the per-tick work function */
 void SchedulerSetWork(Scheduler *scheduler, SchedulerWorkFn work, void *context)
 {
     if (scheduler == NULL) {
@@ -142,6 +144,7 @@ void SchedulerSetWork(Scheduler *scheduler, SchedulerWorkFn work, void *context)
     scheduler->workContext = context;
 }
 
+/* Scheduler: adds a task with its cost in ticks */
 SchedulerStatus SchedulerAddTask(Scheduler *scheduler, const Task *task, uint32_t cost)
 {
     SchedulerTask *entry;
@@ -174,6 +177,7 @@ SchedulerStatus SchedulerAddTask(Scheduler *scheduler, const Task *task, uint32_
     return SchedulerStatusOk;
 }
 
+/* Scheduler: accepts or ignores a sporadic request */
 SchedulerStatus SchedulerReleaseSporadic(Scheduler *scheduler, uint32_t taskId)
 {
     size_t i;
@@ -202,6 +206,7 @@ SchedulerStatus SchedulerReleaseSporadic(Scheduler *scheduler, uint32_t taskId)
     return SchedulerStatusInvalidArgument;
 }
 
+/* Scheduler: one tick = abort, release, select, run */
 SchedulerStatus SchedulerTick(Scheduler *scheduler)
 {
     SchedulerTask *entry;

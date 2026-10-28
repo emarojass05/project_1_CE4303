@@ -6,7 +6,7 @@
 #include "admission.h"
 #include "assign.h"
 
-/* Entry for the task, created on first use; NULL when the table is full */
+/* Report: finds or creates a task's counters */
 static TaskStats *FindTask(Report *report, uint32_t nodeId, uint32_t taskId)
 {
     TaskStats *entry;
@@ -29,7 +29,7 @@ static TaskStats *FindTask(Report *report, uint32_t nodeId, uint32_t taskId)
     return entry;
 }
 
-/* Entry for the node, created on first use; NULL when the table is full */
+/* Report: finds or creates a node's counters */
 static NodeStats *FindNode(Report *report, uint32_t nodeId)
 {
     NodeStats *entry;
@@ -50,6 +50,7 @@ static NodeStats *FindNode(Report *report, uint32_t nodeId)
     return entry;
 }
 
+/* Report: clears every counter */
 void ReportInit(Report *report)
 {
     if (report != NULL) {
@@ -57,6 +58,7 @@ void ReportInit(Report *report)
     }
 }
 
+/* Report: frees the event log */
 void ReportFree(Report *report)
 {
     if (report != NULL) {
@@ -67,6 +69,7 @@ void ReportFree(Report *report)
     }
 }
 
+/* Report: text for a reject reason */
 const char *ReportRejectName(uint32_t reason)
 {
     switch (reason) {
@@ -83,6 +86,7 @@ const char *ReportRejectName(uint32_t reason)
     return "?";
 }
 
+/* Report: text for a task origin */
 const char *ReportOriginName(uint32_t origin)
 {
     switch (origin) {
@@ -93,6 +97,7 @@ const char *ReportOriginName(uint32_t origin)
     return "?";
 }
 
+/* Report: stores a planner decision */
 static void AddDecision(Report *report, ReportDecisionKind kind, const HostEvent *hostEvent)
 {
     ReportDecision *decision;
@@ -111,7 +116,7 @@ static void AddDecision(Report *report, ReportDecisionKind kind, const HostEvent
     decision->hostUs = hostEvent->hostUs;
 }
 
-/* Keeps the event for the Gantt chart; the log grows as needed up to a limit */
+/* Report: keeps an event for the Gantt chart */
 static void LogEvent(Report *report, const HostEvent *hostEvent)
 {
     ReportLogged *grown;
@@ -139,6 +144,7 @@ static void LogEvent(Report *report, const HostEvent *hostEvent)
     report->logCount++;
 }
 
+/* Report: keeps the highest tick seen for a node */
 static void SeeTick(NodeStats *node, uint32_t ticks)
 {
     if (ticks > node->observedTicks) {
@@ -146,7 +152,7 @@ static void SeeTick(NodeStats *node, uint32_t ticks)
     }
 }
 
-/* The task leaves the processor at tick end (exclusive) */
+/* Report: a task leaves the processor */
 static void StopRunning(TaskStats *task, uint32_t end)
 {
     if (task->running) {
@@ -157,6 +163,7 @@ static void StopRunning(TaskStats *task, uint32_t end)
     }
 }
 
+/* Report: counts one node event by type */
 static bool RecordNodeEvent(Report *report, const HostEvent *hostEvent)
 {
     const Event *event = &hostEvent->event;
@@ -248,7 +255,7 @@ static bool RecordNodeEvent(Report *report, const HostEvent *hostEvent)
     return true;
 }
 
-/* One more estimate of the host time of tick zero (see NodeStats) */
+/* Report: updates the skew estimate */
 static void RecordTickReport(Report *report, NodeStats *node, const HostEvent *hostEvent)
 {
     int64_t zero;
@@ -275,6 +282,7 @@ static void RecordTickReport(Report *report, NodeStats *node, const HostEvent *h
     node->windowCount = 0;
 }
 
+/* Report: counts one event from the queue */
 bool ReportRecord(Report *report, const HostEvent *hostEvent)
 {
     NodeStats *node;
@@ -349,6 +357,7 @@ typedef struct {
     bool sporadic;
 } FinalPlace;
 
+/* Report: final node of each task */
 static uint32_t FinalPlacement(const Report *report, FinalPlace *places)
 {
     uint32_t count = 0;
@@ -392,7 +401,7 @@ static uint32_t FinalPlacement(const Report *report, FinalPlace *places)
     return count;
 }
 
-/* Cost and period of the task on the node, from the last accepted decision */
+/* Report: cost and period of a task on a node */
 static bool TaskLoad(const Report *report, uint32_t nodeId, uint32_t taskId, uint32_t *cost,
                      uint32_t *period)
 {
@@ -412,6 +421,7 @@ static bool TaskLoad(const Report *report, uint32_t nodeId, uint32_t taskId, uin
     return found;
 }
 
+/* Report: host seconds since the start */
 static double Seconds(const Report *report, uint64_t hostUs)
 {
     if (report->startUs == 0 || hostUs < report->startUs) {
@@ -420,6 +430,7 @@ static double Seconds(const Report *report, uint64_t hostUs)
     return (double)(hostUs - report->startUs) / 1e6;
 }
 
+/* Report: prints the run settings */
 static void PrintRun(const Report *report, FILE *out)
 {
     uint32_t longest = 0;
@@ -444,6 +455,7 @@ static void PrintRun(const Report *report, FILE *out)
     fprintf(out, "Events ignored: %u\n", (unsigned)report->ignoredEvents);
 }
 
+/* Report: prints accepted and rejected tasks */
 static void PrintDecisions(const Report *report, FILE *out)
 {
     uint32_t accepted = 0;
@@ -477,6 +489,7 @@ static void PrintDecisions(const Report *report, FILE *out)
     fprintf(out, "  %u accepted, %u rejected\n", (unsigned)accepted, (unsigned)rejected);
 }
 
+/* Report: prints per-node totals */
 static void PrintNodes(const Report *report, FILE *out)
 {
     FinalPlace places[ReportMaxDecisions];
@@ -545,6 +558,7 @@ static void PrintNodes(const Report *report, FILE *out)
     }
 }
 
+/* Report: prints per-task counters */
 static void PrintTaskTables(const Report *report, FILE *out)
 {
     uint32_t n;
@@ -597,6 +611,7 @@ static void PrintTaskTables(const Report *report, FILE *out)
     }
 }
 
+/* Report: prints sporadic response latency */
 static void PrintSporadic(const Report *report, FILE *out)
 {
     double tickMs = report->haveRun ? (double)report->run.tickMs : 0.0;
@@ -640,6 +655,7 @@ typedef struct {
     bool missed;
 } GanttRow;
 
+/* Report: finds a Gantt row */
 static GanttRow *FindRow(GanttRow *rows, uint32_t rowCount, uint32_t taskId)
 {
     uint32_t i;
@@ -652,6 +668,7 @@ static GanttRow *FindRow(GanttRow *rows, uint32_t rowCount, uint32_t taskId)
     return NULL;
 }
 
+/* Report: applies an event to a Gantt row */
 static void ApplyToRow(GanttRow *row, EventType type)
 {
     switch (type) {
@@ -680,7 +697,7 @@ static void ApplyToRow(GanttRow *row, EventType type)
     }
 }
 
-/* Replays the events of the node and prints ticks [from, to) */
+/* Report: prints one Gantt window */
 static void PrintGanttWindow(const Report *report, const NodeStats *node, uint32_t from,
                              uint32_t to, FILE *out)
 {
@@ -782,6 +799,7 @@ static void PrintGanttWindow(const Report *report, const NodeStats *node, uint32
     free(grid);
 }
 
+/* Report: prints the Gantt chart */
 static void PrintGantt(const Report *report, FILE *out)
 {
     uint32_t n;
@@ -811,6 +829,7 @@ static void PrintGantt(const Report *report, FILE *out)
     }
 }
 
+/* Report: lists task switches and misses */
 static void PrintSwitchesAndMisses(const Report *report, FILE *out)
 {
     uint32_t n;
@@ -849,6 +868,7 @@ static void PrintSwitchesAndMisses(const Report *report, FILE *out)
     }
 }
 
+/* Report: prints link counters */
 static void PrintLink(const Report *report, FILE *out)
 {
     uint32_t n;
@@ -872,7 +892,7 @@ static void PrintLink(const Report *report, FILE *out)
     }
 }
 
-/* Index of the skew point of the node closest in time to hostUs */
+/* Report: closest skew point in time */
 static uint32_t NearestPoint(const NodeStats *node, uint64_t hostUs)
 {
     uint32_t best = 0;
@@ -891,6 +911,7 @@ static uint32_t NearestPoint(const NodeStats *node, uint64_t hostUs)
     return best;
 }
 
+/* Report: prints skew between nodes */
 static void PrintSkew(const Report *report, FILE *out)
 {
     const NodeStats *reference = NULL;
@@ -958,6 +979,7 @@ static void PrintSkew(const Report *report, FILE *out)
     }
 }
 
+/* Report: prints the full summary */
 void ReportPrint(const Report *report, FILE *out)
 {
     if (report == NULL || out == NULL) {

@@ -7,7 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 
-/* Waits on a semaphore and retries when a signal interrupts the wait */
+/* Queue: sem_wait that retries after a signal */
 static bool WaitSemaphore(sem_t *semaphore)
 {
     while (sem_wait(semaphore) != 0) {
@@ -18,7 +18,7 @@ static bool WaitSemaphore(sem_t *semaphore)
     return true;
 }
 
-/* Starts the three semaphores as shared between processes */
+/* Queue: starts the three shared semaphores */
 static bool InitSemaphores(EventQueue *queue)
 {
     if (sem_init(&queue->mutex, 1, 1) != 0) {
@@ -36,7 +36,7 @@ static bool InitSemaphores(EventQueue *queue)
     return true;
 }
 
-/* Maps the shared memory behind fd into this process */
+/* Queue: maps the shared memory */
 static EventQueue *MapQueue(int fd)
 {
     void *memory = mmap(NULL, sizeof(EventQueue), PROT_READ | PROT_WRITE,
@@ -48,6 +48,7 @@ static EventQueue *MapQueue(int fd)
     return (EventQueue *)memory;
 }
 
+/* Queue: creates the shared memory and semaphores */
 EventQueue *EventQueueCreate(const char *name)
 {
     EventQueue *queue;
@@ -86,6 +87,7 @@ EventQueue *EventQueueCreate(const char *name)
     return queue;
 }
 
+/* Queue: maps an existing shared queue */
 EventQueue *EventQueueOpen(const char *name)
 {
     EventQueue *queue;
@@ -108,6 +110,7 @@ EventQueue *EventQueueOpen(const char *name)
     return queue;
 }
 
+/* Queue: unmaps it in this process */
 void EventQueueClose(EventQueue *queue)
 {
     if (queue != NULL) {
@@ -115,6 +118,7 @@ void EventQueueClose(EventQueue *queue)
     }
 }
 
+/* Queue: frees semaphores and removes shared memory */
 void EventQueueDestroy(EventQueue *queue, const char *name)
 {
     if (queue != NULL) {
@@ -128,6 +132,7 @@ void EventQueueDestroy(EventQueue *queue, const char *name)
     }
 }
 
+/* Queue: waits for room, then appends an event */
 bool EventQueuePush(EventQueue *queue, const HostEvent *event)
 {
     if (queue == NULL || event == NULL) {
@@ -155,6 +160,7 @@ bool EventQueuePush(EventQueue *queue, const HostEvent *event)
     return true;
 }
 
+/* Queue: waits for an event, then removes the oldest */
 bool EventQueuePop(EventQueue *queue, HostEvent *outEvent)
 {
     if (queue == NULL || outEvent == NULL) {
@@ -182,6 +188,7 @@ bool EventQueuePop(EventQueue *queue, HostEvent *outEvent)
     return true;
 }
 
+/* Queue: closes it and wakes every sleeper */
 void EventQueueShutdown(EventQueue *queue)
 {
     if (queue == NULL) {
@@ -198,6 +205,7 @@ void EventQueueShutdown(EventQueue *queue)
     sem_post(&queue->freeSlots);
 }
 
+/* Queue: number of stored events */
 size_t EventQueueCount(EventQueue *queue)
 {
     size_t count;
@@ -209,6 +217,8 @@ size_t EventQueueCount(EventQueue *queue)
     sem_post(&queue->mutex);
     return count;
 }
+
+/* Queue: monotonic clock in microseconds */
 uint64_t HostClockUs(void)
 {
     struct timespec now;

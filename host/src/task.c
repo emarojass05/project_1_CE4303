@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 
+/* Task: checks a task has valid type and nonzero W, T, D */
 TaskStatus TaskValidate(const Task *task)
 {
     if (task == NULL) {
@@ -16,6 +17,7 @@ TaskStatus TaskValidate(const Task *task)
     return TaskStatusOk;
 }
 
+/* Cost: converts work into ticks for a node (rounded up) */
 TaskStatus TaskCost(const Task *task, uint32_t unitsPerTick, uint32_t *outCost)
 {
     if (task == NULL || outCost == NULL || unitsPerTick == 0) {
