@@ -1,0 +1,131 @@
+8 task(s) from tasks/demo_m4.csv, 2 node(s)
+Node 1 (/dev/ttyUSB0): sn = 61 work units per tick of 10 ms
+Node 2 (/dev/ttyACM0): sn = 86 work units per tick of 10 ms
+Assignment (EDF, worst-fit):
+  task 1: node 2, C = 5 ticks, U = 0.250
+  task 2: node 2, C = 4 ticks, U = 0.100
+  task 3: node 1, C = 9 ticks, U = 0.360
+  task 4: node 1, C = 10 ticks, U = 0.200
+  task 5: node 2, C = 3 ticks, U = 0.100
+  task 6: node 1, C = 3 ticks, U = 0.030
+  task 7: node 2, C = 2 ticks, U = 0.020
+  task 8: node 2, C = 2 ticks, U = 0.200
+Running. Press q to stop, h for the other commands.
+Node for the sporadic release (1-2): 1
+Node 1: sporadic task 6 released (ignored if before its minimum interval)
+Node for the sporadic release (1-2): 2
+Node 2: sporadic task 7 released (ignored if before its minimum interval)
+New task (id,type,W,T,D,criticality): sg dialout -c "./build/bin/host config/demo_m4.conf | tee docs/resultados/m5_demo_k.txt"                                                                                        9,P,100,20,20,1
+  task 9: added to node 1, C = 2 ticks, U = 0.100
+Node to take down (1-2): 2
+Node 2 stopped; it is declared down after 3 missed tick reports
+Node 2 DOWN: no tick report for 485 ms (3 missed, last tick 9190)
+Replanning the tasks of node 2:
+  task 7: rejected, sporadic task of a node that went down
+  task 8: restarted on node 1, C = 3 ticks, U = 0.300
+  task 5 (criticality 3): rejected, its node went down and no other node can take it
+  task 1 (criticality 2): rejected, its node went down and no other node can take it
+  task 2 (criticality 1): rejected, its node went down and no other node can take it
+
+Stopping the nodes...
+===== Report =====
+Run: EDF, worst-fit, tick 10 ms, 2 node(s), tick report every 10 ticks, down after 3 missed reports
+Length: 11985 ticks (119.85 s)
+Events received: 10332
+Events ignored: 0
+
+--- Accepted and rejected tasks ---
+  [   0.00 s] task 1 (P, W=430, T=20, D=20, crit=2, task file): accepted on node 2, C = 5, U = 0.250
+  [   0.00 s] task 2 (P, W=344, T=40, D=40, crit=1, task file): accepted on node 2, C = 4, U = 0.100
+  [   0.00 s] task 3 (P, W=516, T=25, D=25, crit=5, task file): accepted on node 1, C = 9, U = 0.360
+  [   0.00 s] task 4 (P, W=602, T=50, D=50, crit=1, task file): accepted on node 1, C = 10, U = 0.200
+  [   0.00 s] task 5 (P, W=258, T=30, D=30, crit=3, task file): accepted on node 2, C = 3, U = 0.100
+  [   0.00 s] task 6 (S, W=172, T=100, D=50, crit=5, task file): accepted on node 1, C = 3, U = 0.030
+  [   0.00 s] task 7 (S, W=172, T=100, D=50, crit=5, task file): accepted on node 2, C = 2, U = 0.020
+  [   0.00 s] task 8 (P, W=172, T=10, D=10, crit=4, task file): accepted on node 2, C = 2, U = 0.200
+  [  66.65 s] task 9 (P, W=100, T=20, D=20, crit=1, manual): accepted on node 1, C = 2, U = 0.100
+  [  92.39 s] node 2 down: its tasks are relocated
+  [  92.39 s] task 7 (S, W=172, T=100, D=50, crit=5, relocated): rejected, sporadic task of a node that went down
+  [  92.40 s] task 8 (P, W=172, T=10, D=10, crit=4, relocated): accepted on node 1, C = 3, U = 0.300
+  [  92.40 s] task 5 (P, W=258, T=30, D=30, crit=3, relocated): rejected, its node went down and no other node can take it
+  [  92.40 s] task 1 (P, W=430, T=20, D=20, crit=2, relocated): rejected, its node went down and no other node can take it
+  [  92.40 s] task 2 (P, W=344, T=40, D=40, crit=1, relocated): rejected, its node went down and no other node can take it
+  10 accepted, 4 rejected
+
+--- Nodes ---
+Node 1 (/dev/ttyUSB0): sn 61
+  Utilization: theoretical 0.990 (bound 1.000, 5 task(s) at the end), measured 0.674 (8073 busy of 11985 ticks)
+  Task switches: 1505 (243 preemptions)
+Node 2 (/dev/ttyACM0): sn 86, DOWN at 92.39 s (last reported tick 9190, k command)
+  Utilization: theoretical - (no tasks left), measured 0.651 (5983 busy of 9192 ticks before going down)
+  Task switches: 2071 (153 preemptions)
+
+--- Tasks: releases, execution, deadlines and failures ---
+Rel: jobs released (periodic, or sporadic accepted)  Ign: sporadic releases ignored (before the minimum interval)
+Run: ticks executed  Resp: response time in ticks (release to end)
+Node 1:
+  Task  Type Rel    Start  Done   Miss  Abort Preem Ign  Run     MinRsp AvgRsp MaxRsp U teo  U med 
+  3     P    480    615    479    0     0     135   0    4313    9      10.6   17     0.360  0.360 
+  4     P    240    348    240    0     0     108   0    2400    19     23.5   44     0.200  0.200 
+  6     S    1      1      1      0     0     0     0    3       3      3.0    3      0.030  0.000 
+  9     P    267    266    266    0     0     0     0    532     2      3.5    13     0.100  0.044 
+  8     P    275    275    275    0     0     0     0    825     3      3.6    7      0.300  0.069 
+Node 2:
+  Task  Type Rel    Start  Done   Miss  Abort Preem Ign  Run     MinRsp AvgRsp MaxRsp U teo  U med 
+  1     P    460    460    460    0     0     0     0    2300    7      7.0    7      0.250  0.250 
+  2     P    230    383    230    0     0     153   0    920     13     15.0   16     0.100  0.100 
+  5     P    307    307    307    0     0     0     0    921     5      7.5    10     0.100  0.100 
+  8     P    920    920    920    0     0     0     0    1840    2      2.0    2      0.200  0.200 
+  7     S    1      1      1      0     0     0     0    2       14     14.0   14     0.020  0.000 
+
+--- Sporadic tasks: response latency ---
+Node 1 task 6: 1 release(s) accepted, 0 ignored, 1 completed, 0 missed
+  latency from release to completion: min 3, avg 3.0, max 3 ticks (30.0 / 30.0 / 30.0 ms)
+Node 2 task 7: 1 release(s) accepted, 0 ignored, 1 completed, 0 missed
+  latency from release to completion: min 14, avg 14.0, max 14 ticks (140.0 / 140.0 / 140.0 ms)
+
+--- Gantt chart per node ---
+# running   - released, waiting   ! deadline missed (job aborted)   . no job
+Node 1, ticks 0 to 99:
+  tick   0         10        20        30        40        50        60        70        80        90        
+  T3     #########................#########................#########................#########................
+  T4     ---------##########...............................---------##########...............................
+  T6     ....................................................................................................
+  T8     ....................................................................................................
+  T9     ....................................................................................................
+Node 1, last ticks 11885 to 11984:
+  tick        11890     11900     11910     11920     11930     11940     11950     11960     11970     11980
+  T3     #######........---#--####---####........-####---#####............---#######---##..........--------##
+  T4     ...............-----------------###---#--------------######......-----------------###---#######.....
+  T6     ....................................................................................................
+  T8     .....--###.....###.......###.......###.......###.......----###...###.......###.......###.......###..
+  T9     ----------##.......##..................##..................---##...............-##.................-
+Node 2, ticks 0 to 99:
+  tick   0         10        20        30        40        50        60        70        80        90        
+  T1     --#####.............--#####.............--#####.............--#####.............--#####.............
+  T2     ------------####........................-------###--#...........................-------###-----#....
+  T5     -------###....................--###.........................-------###....................--###.....
+  T7     ....................................................................................................
+  T8     ##........##........##........##........##........##........##........##........##........##........
+Node 2, last ticks 9092 to 9191:
+  tick           9100      9110      9120      9130      9140      9150      9160      9170      9180        
+  T1     ........--#####.............--#####.............--#####.............--#####.............--#####.....
+  T2     ---#........................------------####........................-------###--#...................
+  T5     ###.........................-------###....................--###.........................-------###..
+  T7     ....................................................................................................
+  T8     ........##........##........##........##........##........##........##........##........##........##
+
+--- Task switches and deadline misses (first 20 per node) ---
+Node 1 switches: 0:idle>3 9:3>4 25:idle>3 50:idle>3 59:3>4 75:idle>3 100:idle>3 109:3>4 125:idle>3 150:idle>3 159:3>4 175:idle>3 200:idle>3 209:3>4 225:idle>3 250:idle>3 259:3>4 275:idle>3 300:idle>3 309:3>4
+Node 1 misses: none
+Node 2 switches: 0:idle>8 2:8>1 7:1>5 10:5>8 12:8>2 20:idle>8 22:8>1 30:idle>8 32:8>5 40:idle>8 42:8>1 47:1>2 50:2>8 52:8>2 60:idle>8 62:8>1 67:1>5 70:5>8 80:idle>8 82:8>1
+Node 2 misses: none
+
+--- Link ---
+Node 1: frames 5481, events 4272, corrupt frames 0, tick reports 1198, misses 0, dropped events 0, retransmissions 0, leftovers of an earlier run 0
+Node 2: frames 6990, events 6060, corrupt frames 0, tick reports 919, misses 0, dropped events 0, retransmissions 0, leftovers of an earlier run 0
+
+--- Skew between nodes (F12) ---
+Tick zero of each node estimated by the host as arrival - tick x tick_ms, smallest value of each 10 tick reports
+Node 2 vs node 1: -2.11 ms at the start, -7.55 ms 90.0 s later (while both ran), drift -61 ppm
+  Ack of Start: node 2 -0.04 ms after node 1

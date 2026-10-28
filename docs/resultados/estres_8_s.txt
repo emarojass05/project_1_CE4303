@@ -1,0 +1,90 @@
+8 task(s) from tasks/estres_8tareas.csv, 1 node(s)
+Node 1 (/dev/ttyUSB0): sn = 61 work units per tick of 10 ms
+Assignment (EDF, first-fit):
+  task 1: node 1, C = 2 ticks, U = 0.200
+  task 2: node 1, C = 2 ticks, U = 0.100
+  task 3: node 1, C = 3 ticks, U = 0.100
+  task 4: node 1, C = 4 ticks, U = 0.100
+  task 5: node 1, C = 5 ticks, U = 0.100
+  task 6: node 1, C = 4 ticks, U = 0.160
+  task 7: node 1, C = 5 ticks, U = 0.100
+  task 8: node 1, C = 2 ticks, U = 0.020
+Running. Press q to stop, h for the other commands.
+Node for the sporadic release (1-1): 1
+Node 1: sporadic task 8 released (ignored if before its minimum interval)
+Node for the sporadic release (1-1): 1
+Node 1: sporadic task 8 released (ignored if before its minimum interval)
+
+Stopping the nodes...
+===== Report =====
+Run: EDF, first-fit, tick 10 ms, 1 node(s), tick report every 10 ticks, down after 3 missed reports
+Length: 6726 ticks (67.26 s)
+Events received: 6549
+Events ignored: 0
+
+--- Accepted and rejected tasks ---
+  [   0.00 s] task 1 (P, W=100, T=10, D=10, crit=3, task file): accepted on node 1, C = 2, U = 0.200
+  [   0.00 s] task 2 (P, W=100, T=20, D=20, crit=1, task file): accepted on node 1, C = 2, U = 0.100
+  [   0.00 s] task 3 (P, W=150, T=30, D=30, crit=2, task file): accepted on node 1, C = 3, U = 0.100
+  [   0.00 s] task 4 (P, W=210, T=40, D=40, crit=4, task file): accepted on node 1, C = 4, U = 0.100
+  [   0.00 s] task 5 (P, W=270, T=50, D=50, crit=2, task file): accepted on node 1, C = 5, U = 0.100
+  [   0.00 s] task 6 (P, W=210, T=25, D=25, crit=5, task file): accepted on node 1, C = 4, U = 0.160
+  [   0.00 s] task 7 (P, W=270, T=50, D=50, crit=1, task file): accepted on node 1, C = 5, U = 0.100
+  [   0.00 s] task 8 (S, W=100, T=100, D=50, crit=5, task file): accepted on node 1, C = 2, U = 0.020
+  8 accepted, 0 rejected
+
+--- Nodes ---
+Node 1 (/dev/ttyUSB0): sn 61
+  Utilization: theoretical 0.880 (bound 1.000, 8 task(s) at the end), measured 0.862 (5796 busy of 6726 ticks)
+  Task switches: 2302 (358 preemptions)
+
+--- Tasks: releases, execution, deadlines and failures ---
+Rel: jobs released (periodic, or sporadic accepted)  Ign: sporadic releases ignored (before the minimum interval)
+Run: ticks executed  Resp: response time in ticks (release to end)
+Node 1:
+  Task  Type Rel    Start  Done   Miss  Abort Preem Ign  Run     MinRsp AvgRsp MaxRsp U teo  U med 
+  1     P    673    673    673    0     0     0     0    1346    2      2.0    2      0.200  0.200 
+  2     P    337    337    337    0     0     0     0    674     4      4.2    7      0.100  0.100 
+  3     P    225    248    224    0     0     23    0    674     5      7.8    13     0.100  0.100 
+  4     P    169    223    168    0     0     55    0    672     8      12.4   17     0.100  0.100 
+  5     P    135    259    135    0     0     124   0    675     15     20.1   26     0.100  0.100 
+  6     P    270    335    269    0     0     66    0    1076    4      6.7    10     0.160  0.160 
+  7     P    135    224    135    0     0     89    0    675     20     29.9   37     0.100  0.100 
+  8     S    2      3      2      0     0     1     0    4       2      13.0   24     0.020  0.001 
+
+--- Sporadic tasks: response latency ---
+Node 1 task 8: 2 release(s) accepted, 0 ignored, 2 completed, 0 missed
+  latency from release to completion: min 2, avg 13.0, max 24 ticks (20.0 / 130.0 / 240.0 ms)
+
+--- Gantt chart per node ---
+# running   - released, waiting   ! deadline missed (job aborted)   . no job
+Node 1, ticks 0 to 99:
+  tick   0         10        20        30        40        50        60        70        80        90        
+  T1     ##........##........##........##........##........##........##........##........##........##........
+  T2     --##................--##................--##................--##................--##................
+  T3     --------##--#.................-------###....................----###.......................--###.....
+  T4     -------------####.......................----####................................----####............
+  T5     -----------------###----##........................------####-------#................................
+  T6     ----####.................-####....................--####...................####.....................
+  T7     --------------------------------#####.............------------------##--###.........................
+  T8     ....................................................................................................
+Node 1, last ticks 6626 to 6725:
+  tick       6630      6640      6650      6660      6670      6680      6690      6700      6710      6720  
+  T1     ....##........##........##........##........##........##........##........##........##........##....
+  T2     ..............--##................--##................--##................--##................--##..
+  T3     ....-------###....................----###.......................--###.........................----##
+  T4     ..............----####................................----####................................------
+  T5     ........................------####-------#................................--------##--###...........
+  T6     ####....................--####...................####.....................----####.................-
+  T7     ------#####.............------------------##--###.........................---------------#####......
+  T8     ....................................................................................................
+
+--- Task switches and deadline misses (first 20 per node) ---
+Node 1 switches: 0:idle>1 2:1>2 4:2>6 8:6>3 10:3>1 12:1>3 13:3>4 17:4>5 20:5>1 22:1>2 24:2>5 26:5>6 30:6>1 32:1>7 37:7>3 40:3>1 42:1>2 44:2>4 50:idle>1 52:1>6
+Node 1 misses: none
+
+--- Link ---
+Node 1: frames 7236, events 6549, corrupt frames 0, tick reports 672, misses 0, dropped events 0, retransmissions 0, leftovers of an earlier run 0
+
+--- Skew between nodes (F12) ---
+Tick zero of each node estimated by the host as arrival - tick x tick_ms, smallest value of each 10 tick reports

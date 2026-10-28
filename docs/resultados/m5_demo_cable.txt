@@ -1,0 +1,112 @@
+8 task(s) from tasks/demo_m4.csv, 2 node(s)
+Node 1 (/dev/ttyUSB0): sn = 61 work units per tick of 10 ms
+Node 2 (/dev/ttyACM0): sn = 86 work units per tick of 10 ms
+Assignment (EDF, worst-fit):
+  task 1: node 2, C = 5 ticks, U = 0.250
+  task 2: node 2, C = 4 ticks, U = 0.100
+  task 3: node 1, C = 9 ticks, U = 0.360
+  task 4: node 1, C = 10 ticks, U = 0.200
+  task 5: node 2, C = 3 ticks, U = 0.100
+  task 6: node 1, C = 3 ticks, U = 0.030
+  task 7: node 2, C = 2 ticks, U = 0.020
+  task 8: node 2, C = 2 ticks, U = 0.200
+Running. Press q to stop, h for the other commands.
+Node for the sporadic release (1-2): 1
+Node 1: sporadic task 6 released (ignored if before its minimum interval)
+Node 1 DOWN: no tick report for 458 ms (3 missed, last tick 7980)
+Replanning the tasks of node 1:
+  task 6: rejected, sporadic task of a node that went down
+  task 3: restarted on node 2, C = 6 ticks, U = 0.240
+  task 4 (criticality 1): rejected, its node went down and no other node can take it
+
+Stopping the nodes...
+===== Report =====
+Run: EDF, worst-fit, tick 10 ms, 2 node(s), tick report every 10 ticks, down after 3 missed reports
+Length: 8574 ticks (85.74 s)
+Events received: 7188
+Events ignored: 0
+
+--- Accepted and rejected tasks ---
+  [   0.00 s] task 1 (P, W=430, T=20, D=20, crit=2, task file): accepted on node 2, C = 5, U = 0.250
+  [   0.00 s] task 2 (P, W=344, T=40, D=40, crit=1, task file): accepted on node 2, C = 4, U = 0.100
+  [   0.00 s] task 3 (P, W=516, T=25, D=25, crit=5, task file): accepted on node 1, C = 9, U = 0.360
+  [   0.00 s] task 4 (P, W=602, T=50, D=50, crit=1, task file): accepted on node 1, C = 10, U = 0.200
+  [   0.00 s] task 5 (P, W=258, T=30, D=30, crit=3, task file): accepted on node 2, C = 3, U = 0.100
+  [   0.00 s] task 6 (S, W=172, T=100, D=50, crit=5, task file): accepted on node 1, C = 3, U = 0.030
+  [   0.00 s] task 7 (S, W=172, T=100, D=50, crit=5, task file): accepted on node 2, C = 2, U = 0.020
+  [   0.00 s] task 8 (P, W=172, T=10, D=10, crit=4, task file): accepted on node 2, C = 2, U = 0.200
+  [  80.27 s] node 1 down: its tasks are relocated
+  [  80.27 s] task 6 (S, W=172, T=100, D=50, crit=5, relocated): rejected, sporadic task of a node that went down
+  [  80.27 s] task 3 (P, W=516, T=25, D=25, crit=5, relocated): accepted on node 2, C = 6, U = 0.240
+  [  80.27 s] task 4 (P, W=602, T=50, D=50, crit=1, relocated): rejected, its node went down and no other node can take it
+  9 accepted, 2 rejected
+
+--- Nodes ---
+Node 1 (/dev/ttyUSB0): sn 61, DOWN at 80.27 s (last reported tick 7980, tick reports stopped)
+  Utilization: theoretical - (no tasks left), measured 0.561 (4479 busy of 7980 ticks before going down)
+  Task switches: 481 (0 preemptions)
+Node 2 (/dev/ttyACM0): sn 86
+  Utilization: theoretical 0.910 (bound 1.000, 6 task(s) at the end), measured 0.666 (5711 busy of 8574 ticks)
+  Task switches: 1968 (158 preemptions)
+
+--- Tasks: releases, execution, deadlines and failures ---
+Rel: jobs released (periodic, or sporadic accepted)  Ign: sporadic releases ignored (before the minimum interval)
+Run: ticks executed  Resp: response time in ticks (release to end)
+Node 1:
+  Task  Type Rel    Start  Done   Miss  Abort Preem Ign  Run     MinRsp AvgRsp MaxRsp U teo  U med 
+  3     P    320    320    319    0     0     0     0    2876    9      9.0    9      0.360  0.360 
+  4     P    160    160    160    0     0     0     0    1600    19     19.0   19     0.200  0.201 
+  6     S    1      1      1      0     0     0     0    3       3      3.0    3      0.030  0.000 
+Node 2:
+  Task  Type Rel    Start  Done   Miss  Abort Preem Ign  Run     MinRsp AvgRsp MaxRsp U teo  U med 
+  1     P    429    429    429    0     0     0     0    2145    7      7.0    8      0.250  0.250 
+  2     P    215    357    215    0     0     142   0    860     13     15.4   29     0.100  0.100 
+  5     P    286    288    286    0     0     2     0    858     5      7.7    18     0.100  0.100 
+  8     P    858    858    858    0     0     0     0    1716    2      2.0    2      0.200  0.200 
+  3     P    22     36     22     0     0     14    0    132     6      10.1   13     0.240  0.015 
+
+--- Sporadic tasks: response latency ---
+Node 1 task 6: 1 release(s) accepted, 0 ignored, 1 completed, 0 missed
+  latency from release to completion: min 3, avg 3.0, max 3 ticks (30.0 / 30.0 / 30.0 ms)
+
+--- Gantt chart per node ---
+# running   - released, waiting   ! deadline missed (job aborted)   . no job
+Node 1, ticks 0 to 99:
+  tick   0         10        20        30        40        50        60        70        80        90        
+  T3     #########................#########................#########................#########................
+  T4     ---------##########...............................---------##########...............................
+  T6     ....................................................................................................
+Node 1, last ticks 7880 to 7979:
+  tick   7880      7890      7900      7910      7920      7930      7940      7950      7960      7970      
+  T3     ####................#########................#########................#########................#####
+  T4     ....................---------##########...............................---------##########...........
+  T6     ....................................................................................................
+Node 2, ticks 0 to 99:
+  tick   0         10        20        30        40        50        60        70        80        90        
+  T1     --#####.............--#####.............--#####.............--#####.............--#####.............
+  T2     ------------####........................-------###--#...........................-------###-----#....
+  T3     ....................................................................................................
+  T5     -------###....................--###.........................-------###....................--###.....
+  T8     ##........##........##........##........##........##........##........##........##........##........
+Node 2, last ticks 8474 to 8573:
+  tick         8480      8490      8500      8510      8520      8530      8540      8550      8560      8570
+  T1     ......--#####.............--#####.............--#####.............--#####.............---#####......
+  T2     ......---------------####.....................------------------##-------##...........--------##--##
+  T3     ...###-------###............-----###--###............-----######..............######................
+  T5     ................--###.........................-------###....................--------##--#...........
+  T8     ......##........##........##........##........##........##........##........##........##........##..
+
+--- Task switches and deadline misses (first 20 per node) ---
+Node 1 switches: 0:idle>3 9:3>4 25:idle>3 50:idle>3 59:3>4 75:idle>3 100:idle>3 109:3>4 125:idle>3 150:idle>3 159:3>4 175:idle>3 200:idle>3 209:3>4 225:idle>3 250:idle>3 259:3>4 275:idle>3 300:idle>3 309:3>4
+Node 1 misses: none
+Node 2 switches: 0:idle>8 2:8>1 7:1>5 10:5>8 12:8>2 20:idle>8 22:8>1 30:idle>8 32:8>5 40:idle>8 42:8>1 47:1>2 50:2>8 52:8>2 60:idle>8 62:8>1 67:1>5 70:5>8 80:idle>8 82:8>1
+Node 2 misses: none
+
+--- Link ---
+Node 1: frames 2248, events 1442, corrupt frames 0, tick reports 798, misses 0, dropped events 0, retransmissions 0, leftovers of an earlier run 0
+Node 2: frames 6614, events 5746, corrupt frames 0, tick reports 857, misses 0, dropped events 0, retransmissions 0, leftovers of an earlier run 0
+
+--- Skew between nodes (F12) ---
+Tick zero of each node estimated by the host as arrival - tick x tick_ms, smallest value of each 10 tick reports
+Node 2 vs node 1: -0.95 ms at the start, -6.03 ms 78.0 s later (while both ran), drift -65 ppm
+  Ack of Start: node 2 -0.01 ms after node 1

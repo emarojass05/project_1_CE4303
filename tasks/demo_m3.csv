@@ -1,0 +1,10 @@
+# Tareas para la demo de M3 (tick de 250 ms, config/demo_m3.conf).
+# Con sn cerca de 1500 UT por tick, W = 1500 cuesta 1 tick, 3000 cuesta 2, etc.
+# El costo real lo calcula el host con el sn medido en cada corrida.
+id,tipo,W,T,D,criticidad
+1,P,3000,5,5,3
+2,P,4500,8,8,2
+3,P,1500,10,10,1
+4,P,3000,6,6,2
+5,P,1500,12,12,1
+6,S,1500,20,20,4
